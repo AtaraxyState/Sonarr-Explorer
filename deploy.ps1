@@ -6,10 +6,10 @@ Write-Host "Starting deployment process..."
 
 # Stop Flow Launcher if it's running
 Write-Host "Stopping Flow Launcher..."
-$flowLauncher = Get-Process -Name $FlowLauncherProcess -ErrorAction SilentlyContinue
-if ($flowLauncher) {
-    Stop-Process -Name $FlowLauncherProcess -Force
-    Start-Sleep -Seconds 2  # Wait for process to fully stop
+$flowLauncherProcess = Get-Process "Flow.Launcher" -ErrorAction SilentlyContinue
+if ($flowLauncherProcess) {
+    $flowLauncherProcess | Stop-Process -Force
+    Start-Sleep -Seconds 2
 }
 
 # Remove existing plugin directory if it exists
@@ -31,6 +31,9 @@ if (!(Test-Path "$PluginDirectory\Images")) {
 Write-Host "Building project..."
 dotnet build .\SonarrFlowLauncherPlugin\SonarrFlowLauncherPlugin.csproj --configuration Release
 
+# Set paths
+$pluginName = "SonarrFlowLauncherPlugin"
+$buildPath = ".\bin\Release\net7.0-windows"
 # Copy plugin files
 Write-Host "Copying plugin files..."
 Copy-Item ".\SonarrFlowLauncherPlugin\bin\Release\*" $PluginDirectory -Recurse -Force

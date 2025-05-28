@@ -10,5 +10,6 @@ namespace SonarrFlowLauncherPlugin.Models
         public int SeasonNumber { get; set; }
         public int EpisodeNumber { get; set; }
         public string Quality { get; set; } = string.Empty;
+        public string PosterPath { get; set; } = string.Empty;
     }
 } 

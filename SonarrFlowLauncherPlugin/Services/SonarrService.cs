@@ -131,7 +131,7 @@ namespace SonarrFlowLauncherPlugin.Services
                 var activity = new SonarrActivity();
 
                 // Get queue (limit to 10 items)
-                var queueUrl = $"{BaseUrl}/queue?pageSize=10&sortKey=timeleft&sortDir=asc";
+                var queueUrl = $"{BaseUrl}/queue?pageSize=10&sortKey=timeleft&sortDir=asc&includeEpisode=true&includeSeries=true";
                 var queueResponse = await _httpClient.GetStringAsync(queueUrl);
                 var queueData = JsonConvert.DeserializeObject<dynamic>(queueResponse);
                 
@@ -139,25 +139,44 @@ namespace SonarrFlowLauncherPlugin.Services
                 {
                     foreach (var record in queueData.records)
                     {
-                        activity.Queue.Add(new SonarrQueueItem
+                        var queueItem = new SonarrQueueItem
                         {
                             Id = record.id,
                             SeriesId = record.seriesId,
-                            Title = record.title ?? string.Empty,
-                            SeasonNumber = record.seasonNumber ?? 0,
-                            EpisodeNumber = record.episodeNumber ?? 0,
+                            Title = record.series?.title ?? string.Empty,
+                            SeasonNumber = record.episode?.seasonNumber ?? 0,
+                            EpisodeNumber = record.episode?.episodeNumber ?? 0,
                             Quality = record.quality?.quality?.name ?? string.Empty,
                             Status = record.status ?? string.Empty,
                             Progress = record.progress ?? 0.0,
                             EstimatedCompletionTime = record.estimatedCompletionTime,
                             Protocol = record.protocol ?? string.Empty,
                             DownloadClient = record.downloadClient ?? string.Empty
-                        });
+                        };
+
+                        // Get series poster if available
+                        if (record.series?.images != null)
+                        {
+                            foreach (var image in record.series.images)
+                            {
+                                if ((string)image.coverType == "poster")
+                                {
+                                    var posterUrl = !string.IsNullOrEmpty((string)image.remoteUrl) ? (string)image.remoteUrl : (string)image.url;
+                                    if (!string.IsNullOrEmpty(posterUrl))
+                                    {
+                                        queueItem.PosterPath = await DownloadPosterAsync(queueItem.SeriesId, posterUrl);
+                                    }
+                                    break;
+                                }
+                            }
+                        }
+
+                        activity.Queue.Add(queueItem);
                     }
                 }
 
                 // Get history (last 10 items)
-                var historyUrl = $"{BaseUrl}/history?page=1&pageSize=10&sortKey=date&sortDir=desc";
+                var historyUrl = $"{BaseUrl}/history?page=1&pageSize=10&sortKey=date&sortDir=desc&includeSeries=true";
                 var historyResponse = await _httpClient.GetStringAsync(historyUrl);
                 var historyData = JsonConvert.DeserializeObject<dynamic>(historyResponse);
 
@@ -165,17 +184,36 @@ namespace SonarrFlowLauncherPlugin.Services
                 {
                     foreach (var record in historyData.records)
                     {
-                        activity.History.Add(new SonarrHistoryItem
+                        var historyItem = new SonarrHistoryItem
                         {
                             Id = record.id,
                             SeriesId = record.seriesId,
-                            Title = record.sourceTitle ?? string.Empty,
+                            Title = record.series?.title ?? record.sourceTitle ?? string.Empty,
                             SeasonNumber = record.episode?.seasonNumber ?? 0,
                             EpisodeNumber = record.episode?.episodeNumber ?? 0,
                             Quality = record.quality?.quality?.name ?? string.Empty,
                             EventType = record.eventType ?? string.Empty,
                             Date = record.date
-                        });
+                        };
+
+                        // Get series poster if available
+                        if (record.series?.images != null)
+                        {
+                            foreach (var image in record.series.images)
+                            {
+                                if ((string)image.coverType == "poster")
+                                {
+                                    var posterUrl = !string.IsNullOrEmpty((string)image.remoteUrl) ? (string)image.remoteUrl : (string)image.url;
+                                    if (!string.IsNullOrEmpty(posterUrl))
+                                    {
+                                        historyItem.PosterPath = await DownloadPosterAsync(historyItem.SeriesId, posterUrl);
+                                    }
+                                    break;
+                                }
+                            }
+                        }
+
+                        activity.History.Add(historyItem);
                     }
                 }
 
@@ -214,7 +252,7 @@ namespace SonarrFlowLauncherPlugin.Services
                 start ??= DateTime.Today;
                 end ??= DateTime.Today.AddDays(7); // Default to a week from today
 
-                var url = $"{BaseUrl}/calendar?start={start:yyyy-MM-dd HH:mm:ss}&end={end:yyyy-MM-dd HH:mm:ss}";
+                var url = $"{BaseUrl}/calendar?start={start:yyyy-MM-dd HH:mm:ss}&end={end:yyyy-MM-dd HH:mm:ss}&includeSeries=true";
                 System.Diagnostics.Debug.WriteLine($"Calling Sonarr Calendar API: {url}");
                 
                 var response = await _httpClient.GetStringAsync(url);
@@ -245,6 +283,24 @@ namespace SonarrFlowLauncherPlugin.Services
                                 Monitored = item.monitored ?? false,
                                 Overview = item.overview ?? string.Empty
                             };
+
+                            // Get series poster if available
+                            if (item.series?.images != null)
+                            {
+                                foreach (var image in item.series.images)
+                                {
+                                    if ((string)image.coverType == "poster")
+                                    {
+                                        var posterUrl = !string.IsNullOrEmpty((string)image.remoteUrl) ? (string)image.remoteUrl : (string)image.url;
+                                        if (!string.IsNullOrEmpty(posterUrl))
+                                        {
+                                            calendarItem.PosterPath = await DownloadPosterAsync(calendarItem.SeriesId, posterUrl);
+                                        }
+                                        break;
+                                    }
+                                }
+                            }
+
                             calendarItems.Add(calendarItem);
                             System.Diagnostics.Debug.WriteLine($"Added calendar item: {calendarItem.Title} S{calendarItem.SeasonNumber:D2}E{calendarItem.EpisodeNumber:D2} - {calendarItem.EpisodeTitle}");
                         }

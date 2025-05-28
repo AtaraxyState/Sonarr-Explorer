@@ -37,7 +37,7 @@ namespace SonarrFlowLauncherPlugin.Commands
                     {
                         Title = $"⬇️ {item.Title}",
                         SubTitle = $"S{item.SeasonNumber:D2}E{item.EpisodeNumber:D2} - {item.Status} ({item.Progress:F1}%) - {item.Quality}",
-                        IcoPath = "Images\\icon.png",
+                        IcoPath = !string.IsNullOrEmpty(item.PosterPath) ? item.PosterPath : "Images\\icon.png",
                         Score = 100
                     });
                     totalItems++;
@@ -58,10 +58,10 @@ namespace SonarrFlowLauncherPlugin.Commands
 
                     results.Add(new Result
                     {
-                        Title = $"{icon} {item.Title}",
-                        SubTitle = $"S{item.SeasonNumber:D2}E{item.EpisodeNumber:D2} - {item.EventType} - {item.Date:g}",
-                        IcoPath = "Images\\icon.png",
-                        Score = 90
+                        Title = $"📜 {item.Title}",
+                        SubTitle = $"S{item.SeasonNumber:D2}E{item.EpisodeNumber:D2} - {item.EventType} - {item.Quality} - {item.Date:g}",
+                        IcoPath = !string.IsNullOrEmpty(item.PosterPath) ? item.PosterPath : "Images\\icon.png",
+                        Score = 95
                     });
                     totalItems++;
                 }

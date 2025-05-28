@@ -3,6 +3,7 @@ using SonarrFlowLauncherPlugin.Services;
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Windows;
 
 namespace SonarrFlowLauncherPlugin.Commands
 {
@@ -109,17 +110,26 @@ namespace SonarrFlowLauncherPlugin.Commands
                         });
 
                         // Add episodes for this date
+                        var index = 0;
                         foreach (var episode in group.OrderBy(e => e.Title))
                         {
                             var status = episode.HasFile ? "✅" : episode.Monitored ? "⏰" : "⚪";
                             results.Add(new Result
                             {
-                                Title = $"{status} {episode.Title}",
-                                SubTitle = $"S{episode.SeasonNumber:D2}E{episode.EpisodeNumber:D2} - {episode.EpisodeTitle}",
-                                IcoPath = "Images\\icon.png",
-                                Score = 95,
-                                Action = _ => SonarrService.OpenSeriesInBrowser(episode.SeriesId).Result
+                                Title = $"{(episode.HasFile ? "✅" : "📅")} {episode.SeriesTitle}",
+                                SubTitle = $"S{episode.SeasonNumber:D2}E{episode.EpisodeNumber:D2} - {episode.EpisodeTitle} - {episode.AirDate:g}",
+                                IcoPath = !string.IsNullOrEmpty(episode.PosterPath) ? episode.PosterPath : "Images\\icon.png",
+                                Score = 100 - index,
+                                Action = _ =>
+                                {
+                                    if (!string.IsNullOrEmpty(episode.Overview))
+                                    {
+                                        MessageBox.Show(episode.Overview, $"{episode.SeriesTitle} - {episode.EpisodeTitle}", MessageBoxButton.OK, MessageBoxImage.Information);
+                                    }
+                                    return true;
+                                }
                             });
+                            index++;
                         }
                     }
                 }
