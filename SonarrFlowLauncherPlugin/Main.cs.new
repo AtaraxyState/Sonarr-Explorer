@@ -1,5 +1,3 @@
-using System;
-using System.Collections.Generic;
 using System.Windows.Controls;
 using Flow.Launcher.Plugin;
 using SonarrFlowLauncherPlugin.Services;
@@ -47,40 +45,32 @@ namespace SonarrFlowLauncherPlugin
                 {
                     new Result
                     {
-                        Title = "Search Sonarr Library",
-                        SubTitle = "Type -l followed by your search term",
+                        Title = "Search Sonarr",
+                        SubTitle = "Type to search your Sonarr library",
                         IcoPath = "Images\\icon.png",
                         Action = _ => false
                     },
                     new Result
                     {
-                        Title = "View Sonarr Activity",
-                        SubTitle = "Type -a to view current downloads and history",
+                        Title = "Sonarr Activity",
+                        SubTitle = "View current downloads and recent history",
                         IcoPath = "Images\\icon.png",
-                        Action = _ => false
+                        Action = _ => _sonarrService.OpenActivityInBrowser().Result
                     }
                 };
             }
 
-            var searchTerm = query.Search.Trim();
-            var isActivity = searchTerm.StartsWith("-a");
-            var isLibrarySearch = searchTerm.StartsWith("-l");
-
-            // Activity view
-            if (isActivity)
+            // Check if the query is for activity
+            if (query.Search.ToLower().StartsWith("activity"))
             {
                 var results = new List<Result>();
                 try
                 {
                     var activity = _sonarrService.GetActivityAsync().Result;
-                    var totalItems = 0;
-                    const int maxItems = 10;
                     
-                    // Add queue items (prioritize these)
+                    // Add queue items
                     foreach (var item in activity.Queue)
                     {
-                        if (totalItems >= maxItems) break;
-                        
                         results.Add(new Result
                         {
                             Title = $"⬇️ {item.Title}",
@@ -88,14 +78,11 @@ namespace SonarrFlowLauncherPlugin
                             IcoPath = "Images\\icon.png",
                             Score = 100
                         });
-                        totalItems++;
                     }
 
-                    // Add history items (fill remaining slots)
+                    // Add history items
                     foreach (var item in activity.History)
                     {
-                        if (totalItems >= maxItems) break;
-                        
                         var icon = item.EventType.ToLower() switch
                         {
                             "grabbed" => "⬇️",
@@ -111,7 +98,6 @@ namespace SonarrFlowLauncherPlugin
                             IcoPath = "Images\\icon.png",
                             Score = 90
                         });
-                        totalItems++;
                     }
 
                     if (!results.Any())
@@ -152,85 +138,64 @@ namespace SonarrFlowLauncherPlugin
                 }
             }
 
-            // Library search
-            if (isLibrarySearch || !isActivity)  // Default to library search if no flag is provided
+            var results = new List<Result>();
+            
+            try
             {
-                var results = new List<Result>();
-                var searchQuery = isLibrarySearch ? searchTerm.Substring(2).Trim() : searchTerm;
-                
-                if (string.IsNullOrWhiteSpace(searchQuery))
+                System.Diagnostics.Debug.WriteLine($"Searching for: {query.Search}");
+                var series = _sonarrService.SearchSeriesAsync(query.Search).Result;
+                System.Diagnostics.Debug.WriteLine($"Found {series.Count} results");
+
+                if (series.Count == 0)
                 {
-                    return new List<Result>
-                    {
-                        new Result
-                        {
-                            Title = "Enter Search Term",
-                            SubTitle = "Type your search query after -l",
-                            IcoPath = "Images\\icon.png",
-                            Score = 100
-                        }
-                    };
-                }
-
-                try
-                {
-                    System.Diagnostics.Debug.WriteLine($"Searching for: {searchQuery}");
-                    var series = _sonarrService.SearchSeriesAsync(searchQuery).Result;
-                    System.Diagnostics.Debug.WriteLine($"Found {series.Count} results");
-
-                    if (series.Count == 0)
-                    {
-                        results.Add(new Result
-                        {
-                            Title = "No Results Found",
-                            SubTitle = $"No shows found matching '{searchQuery}'",
-                            IcoPath = "Images\\icon.png",
-                            Score = 100,
-                            Action = _ => false
-                        });
-                    }
-
-                    foreach (var show in series)
-                    {
-                        var stats = show.Statistics ?? new Models.SeriesStatistics();
-                        var episodeInfo = $"{stats.EpisodeFileCount}/{stats.TotalEpisodeCount} Episodes";
-                        if (stats.TotalEpisodeCount == 0)
-                        {
-                            episodeInfo = "No Episodes";
-                        }
-
-                        results.Add(new Result
-                        {
-                            Title = show.Title,
-                            SubTitle = $"{show.Network} | {show.Status} | {stats.SeasonCount} Seasons | {episodeInfo}",
-                            IcoPath = !string.IsNullOrEmpty(show.PosterPath) ? show.PosterPath : "Images\\icon.png",
-                            Score = 100,
-                            Action = _ =>
-                            {
-                                return _sonarrService.OpenSeriesInBrowser(show.Id).Result;
-                            }
-                        });
-                    }
-                }
-                catch (Exception ex)
-                {
-                    var errorMessage = ex.InnerException?.Message ?? ex.Message;
-                    System.Diagnostics.Debug.WriteLine($"Error in Query: {errorMessage}");
-                    
                     results.Add(new Result
                     {
-                        Title = "Error Connecting to Sonarr",
-                        SubTitle = $"Error: {errorMessage}",
+                        Title = "No Results Found",
+                        SubTitle = $"No shows found matching '{query.Search}'",
                         IcoPath = "Images\\icon.png",
                         Score = 100,
                         Action = _ => false
                     });
                 }
 
-                return results;
+                foreach (var show in series)
+                {
+                    var stats = show.Statistics ?? new Models.SeriesStatistics();
+                    var episodeInfo = $"{stats.EpisodeFileCount}/{stats.TotalEpisodeCount} Episodes";
+                    if (stats.TotalEpisodeCount == 0)
+                    {
+                        episodeInfo = "No Episodes";
+                    }
+
+                    results.Add(new Result
+                    {
+                        Title = show.Title,
+                        SubTitle = $"{show.Network} | {show.Status} | {stats.SeasonCount} Seasons | {episodeInfo}",
+                        IcoPath = !string.IsNullOrEmpty(show.PosterPath) ? show.PosterPath : "Images\\icon.png",
+                        Score = 100,
+                        Action = _ =>
+                        {
+                            return _sonarrService.OpenSeriesInBrowser(show.Id).Result;
+                        }
+                    });
+                }
+            }
+            catch (Exception ex)
+            {
+                var errorMessage = ex.InnerException?.Message ?? ex.Message;
+                System.Diagnostics.Debug.WriteLine($"Error in Query: {errorMessage}");
+                
+                results.Add(new Result
+                {
+                    Title = "Error Connecting to Sonarr",
+                    SubTitle = $"Error: {errorMessage}",
+                    IcoPath = "Images\\icon.png",
+                    Score = 100,
+                    Action = _ => false
+                });
             }
 
-            return new List<Result>();
+            return results;
         }
 
         public Control CreateSettingPanel()

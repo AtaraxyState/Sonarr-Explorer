@@ -123,5 +123,88 @@ namespace SonarrFlowLauncherPlugin.Services
                 return false;
             }
         }
+
+        public async Task<SonarrActivity> GetActivityAsync()
+        {
+            try
+            {
+                var activity = new SonarrActivity();
+
+                // Get queue (limit to 10 items)
+                var queueUrl = $"{BaseUrl}/queue?pageSize=10&sortKey=timeleft&sortDir=asc";
+                var queueResponse = await _httpClient.GetStringAsync(queueUrl);
+                var queueData = JsonConvert.DeserializeObject<dynamic>(queueResponse);
+                
+                if (queueData?.records != null)
+                {
+                    foreach (var record in queueData.records)
+                    {
+                        activity.Queue.Add(new SonarrQueueItem
+                        {
+                            Id = record.id,
+                            SeriesId = record.seriesId,
+                            Title = record.title ?? string.Empty,
+                            SeasonNumber = record.seasonNumber ?? 0,
+                            EpisodeNumber = record.episodeNumber ?? 0,
+                            Quality = record.quality?.quality?.name ?? string.Empty,
+                            Status = record.status ?? string.Empty,
+                            Progress = record.progress ?? 0.0,
+                            EstimatedCompletionTime = record.estimatedCompletionTime,
+                            Protocol = record.protocol ?? string.Empty,
+                            DownloadClient = record.downloadClient ?? string.Empty
+                        });
+                    }
+                }
+
+                // Get history (last 10 items)
+                var historyUrl = $"{BaseUrl}/history?page=1&pageSize=10&sortKey=date&sortDir=desc";
+                var historyResponse = await _httpClient.GetStringAsync(historyUrl);
+                var historyData = JsonConvert.DeserializeObject<dynamic>(historyResponse);
+
+                if (historyData?.records != null)
+                {
+                    foreach (var record in historyData.records)
+                    {
+                        activity.History.Add(new SonarrHistoryItem
+                        {
+                            Id = record.id,
+                            SeriesId = record.seriesId,
+                            Title = record.sourceTitle ?? string.Empty,
+                            SeasonNumber = record.episode?.seasonNumber ?? 0,
+                            EpisodeNumber = record.episode?.episodeNumber ?? 0,
+                            Quality = record.quality?.quality?.name ?? string.Empty,
+                            EventType = record.eventType ?? string.Empty,
+                            Date = record.date
+                        });
+                    }
+                }
+
+                return activity;
+            }
+            catch (Exception ex)
+            {
+                System.Diagnostics.Debug.WriteLine($"Error getting activity: {ex.Message}");
+                throw;
+            }
+        }
+
+        public async Task<bool> OpenActivityInBrowser()
+        {
+            try
+            {
+                var url = $"{(_settings.UseHttps ? "https" : "http")}://{_settings.ServerUrl}/activity";
+                System.Diagnostics.Process.Start(new System.Diagnostics.ProcessStartInfo
+                {
+                    FileName = url,
+                    UseShellExecute = true
+                });
+                return true;
+            }
+            catch (Exception ex)
+            {
+                System.Diagnostics.Debug.WriteLine($"Error opening activity in browser: {ex.Message}");
+                return false;
+            }
+        }
     }
 } 

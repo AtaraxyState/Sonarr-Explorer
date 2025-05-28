@@ -1,5 +1,6 @@
 using Flow.Launcher.Plugin;
 using System;
+using System.Collections.Generic;
 using System.Linq;
 
 namespace SonarrFlowLauncherPlugin
@@ -34,63 +35,25 @@ namespace SonarrFlowLauncherPlugin
                 var context = new PluginInitContext();
                 plugin.Init(context);
 
-                // Test a search query
-                Console.WriteLine("\nTesting search query...");
-                var query = new Query("test", "test", Array.Empty<string>(), Array.Empty<string>(), "sonarr");
-                var results = plugin.Query(query);
+                // Test empty query (should show available commands)
+                Console.WriteLine("\nTesting empty query...");
+                var emptyResults = plugin.Query(new Query("", "", Array.Empty<string>(), Array.Empty<string>(), "sonarr"));
+                PrintResults(emptyResults);
 
-                Console.WriteLine($"\nResults found: {results.Count}");
-                foreach (var result in results)
-                {
-                    Console.WriteLine("\n----------------------------------------");
-                    Console.WriteLine($"Title: {result.Title}");
-                    Console.WriteLine($"Subtitle: {result.SubTitle}");
-                    Console.WriteLine($"Icon Path: {result.IcoPath}");
-                    
-                    // Try to get the underlying show object through reflection
-                    var showField = result.GetType().GetFields(System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance)
-                        .FirstOrDefault(f => f.FieldType == typeof(Models.SonarrSeries));
-                    
-                    if (showField != null)
-                    {
-                        var show = showField.GetValue(result) as Models.SonarrSeries;
-                        if (show != null)
-                        {
-                            Console.WriteLine("\nDetailed Information:");
-                            Console.WriteLine($"  ID: {show.Id}");
-                            Console.WriteLine($"  Network: {show.Network}");
-                            Console.WriteLine($"  Status: {show.Status}");
-                            Console.WriteLine($"  Path: {show.Path}");
-                            
-                            if (show.Statistics != null)
-                            {
-                                Console.WriteLine("\nStatistics:");
-                                Console.WriteLine($"  Season Count: {show.Statistics.SeasonCount}");
-                                Console.WriteLine($"  Episode Count: {show.Statistics.EpisodeCount}");
-                                Console.WriteLine($"  Episode File Count: {show.Statistics.EpisodeFileCount}");
-                                Console.WriteLine($"  Total Episode Count: {show.Statistics.TotalEpisodeCount}");
-                                Console.WriteLine($"  Size on Disk: {show.Statistics.SizeOnDisk / 1024 / 1024} MB");
-                            }
+                // Test activity view
+                Console.WriteLine("\nTesting activity view (-a)...");
+                var activityResults = plugin.Query(new Query("-a", "-a", Array.Empty<string>(), Array.Empty<string>(), "sonarr"));
+                PrintResults(activityResults);
 
-                            if (show.Images != null && show.Images.Any())
-                            {
-                                Console.WriteLine("\nImages:");
-                                foreach (var image in show.Images)
-                                {
-                                    Console.WriteLine($"  Type: {image.CoverType}");
-                                    Console.WriteLine($"  URL: {image.Url}");
-                                    Console.WriteLine($"  Remote URL: {image.RemoteUrl}");
-                                }
-                            }
+                // Test library search
+                Console.WriteLine("\nTesting library search (-l)...");
+                var searchResults = plugin.Query(new Query("-l blue", "-l blue", Array.Empty<string>(), Array.Empty<string>(), "sonarr"));
+                PrintResults(searchResults);
 
-                            if (!string.IsNullOrEmpty(show.PosterPath))
-                            {
-                                Console.WriteLine($"\nDownloaded Poster: {show.PosterPath}");
-                            }
-                        }
-                    }
-                    Console.WriteLine("----------------------------------------");
-                }
+                // Test direct search (without flag)
+                Console.WriteLine("\nTesting direct search (no flag)...");
+                var directResults = plugin.Query(new Query("blue", "blue", Array.Empty<string>(), Array.Empty<string>(), "sonarr"));
+                PrintResults(directResults);
             }
             catch (Exception ex)
             {
@@ -100,6 +63,20 @@ namespace SonarrFlowLauncherPlugin
 
             Console.WriteLine("\nPress any key to exit...");
             Console.ReadKey();
+        }
+
+        private static void PrintResults(List<Result> results)
+        {
+            Console.WriteLine($"\nResults found: {results.Count}");
+            foreach (var result in results)
+            {
+                Console.WriteLine("\n----------------------------------------");
+                Console.WriteLine($"Title: {result.Title}");
+                Console.WriteLine($"Subtitle: {result.SubTitle}");
+                Console.WriteLine($"Icon Path: {result.IcoPath}");
+                Console.WriteLine($"Score: {result.Score}");
+                Console.WriteLine("----------------------------------------");
+            }
         }
     }
 } 
