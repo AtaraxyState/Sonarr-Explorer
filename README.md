@@ -26,9 +26,15 @@ A Flow Launcher plugin to control Sonarr directly from your launcher. Quickly ch
 
 ## Installation
 
+### From Release
 1. Download the latest release
 2. Extract to `%APPDATA%\FlowLauncher\Plugins\SonarrFlowLauncherPlugin`
 3. Restart Flow Launcher
+
+### From Source
+1. Clone this repository
+2. Run `.\deploy.ps1` (requires PowerShell with ExecutionPolicy allowing script execution)
+3. Restart Flow Launcher if it doesn't restart automatically
 
 ## Configuration
 
@@ -43,6 +49,7 @@ Configure the plugin through Flow Launcher settings:
 ### Prerequisites
 - .NET 7.0 SDK
 - Flow Launcher
+- PowerShell (for deployment scripts)
 
 ### Building
 ```powershell
@@ -56,8 +63,30 @@ dotnet build
 
 ### Deployment
 ```powershell
+# With execution policy bypass
+powershell -ExecutionPolicy Bypass -File .\deploy.ps1
+
+# Or if you trust the scripts
 .\deploy.ps1
 ```
+
+### Development Tips
+- The plugin is automatically deployed to: `%APPDATA%\FlowLauncher\Plugins\SonarrFlowLauncherPlugin`
+- Use `Flow.Launcher.Plugin.SDK` for Flow Launcher integration
+- Debug logs can be found in Flow Launcher's logs directory
+
+## Troubleshooting
+
+1. **Plugin Not Loading**
+   - Verify Flow Launcher is running
+   - Check if the plugin is listed in Flow Launcher settings
+   - Ensure all DLLs are properly copied to the plugin directory
+
+2. **Connection Issues**
+   - Verify Sonarr is running and accessible
+   - Check API key is correct
+   - Ensure URL includes port number
+   - Verify HTTPS setting matches your Sonarr configuration
 
 ## License
 
@@ -65,9 +94,10 @@ MIT License
 
 ## Credits
 
-- Sonarr icon from [iconduck.com](https://iconduck.com/icons/253013/sonarr)
+- Uses official Sonarr icon from [Sonarr's repository](https://github.com/Sonarr/Sonarr)
 - Built for [Flow Launcher](https://github.com/Flow-Launcher/Flow.Launcher)
 
 ---
 
+*A Flow Launcher plugin for Sonarr integration*  
 *Developed in [Cursor](https://cursor.sh/)*
