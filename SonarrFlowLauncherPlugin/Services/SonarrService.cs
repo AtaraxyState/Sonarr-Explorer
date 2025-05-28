@@ -206,5 +206,83 @@ namespace SonarrFlowLauncherPlugin.Services
                 return false;
             }
         }
+
+        public async Task<List<SonarrCalendarItem>> GetCalendarAsync(DateTime? start = null, DateTime? end = null)
+        {
+            try
+            {
+                start ??= DateTime.Today;
+                end ??= DateTime.Today.AddDays(7); // Default to a week from today
+
+                var url = $"{BaseUrl}/calendar?start={start:yyyy-MM-dd HH:mm:ss}&end={end:yyyy-MM-dd HH:mm:ss}";
+                System.Diagnostics.Debug.WriteLine($"Calling Sonarr Calendar API: {url}");
+                
+                var response = await _httpClient.GetStringAsync(url);
+                System.Diagnostics.Debug.WriteLine($"Calendar API Response: {response}");
+                
+                var calendarData = JsonConvert.DeserializeObject<List<dynamic>>(response);
+                System.Diagnostics.Debug.WriteLine($"Deserialized {calendarData?.Count ?? 0} calendar items");
+
+                var calendarItems = new List<SonarrCalendarItem>();
+
+                if (calendarData != null)
+                {
+                    foreach (var item in calendarData)
+                    {
+                        try
+                        {
+                            var calendarItem = new SonarrCalendarItem
+                            {
+                                Id = item.id,
+                                SeriesId = item.seriesId,
+                                Title = item.series?.title ?? string.Empty,
+                                SeriesTitle = item.series?.title ?? string.Empty,
+                                EpisodeTitle = item.title ?? string.Empty,
+                                SeasonNumber = item.seasonNumber ?? 0,
+                                EpisodeNumber = item.episodeNumber ?? 0,
+                                AirDate = item.airDate ?? DateTime.MinValue,
+                                HasFile = item.hasFile ?? false,
+                                Monitored = item.monitored ?? false,
+                                Overview = item.overview ?? string.Empty
+                            };
+                            calendarItems.Add(calendarItem);
+                            System.Diagnostics.Debug.WriteLine($"Added calendar item: {calendarItem.Title} S{calendarItem.SeasonNumber:D2}E{calendarItem.EpisodeNumber:D2} - {calendarItem.EpisodeTitle}");
+                        }
+                        catch (Exception ex)
+                        {
+                            System.Diagnostics.Debug.WriteLine($"Error processing calendar item: {ex.Message}");
+                            System.Diagnostics.Debug.WriteLine($"Raw item data: {JsonConvert.SerializeObject(item)}");
+                        }
+                    }
+                }
+
+                return calendarItems;
+            }
+            catch (Exception ex)
+            {
+                System.Diagnostics.Debug.WriteLine($"Error getting calendar: {ex.Message}");
+                System.Diagnostics.Debug.WriteLine($"Stack trace: {ex.StackTrace}");
+                throw;
+            }
+        }
+
+        public async Task<bool> OpenCalendarInBrowser()
+        {
+            try
+            {
+                var url = $"{(_settings.UseHttps ? "https" : "http")}://{_settings.ServerUrl}/calendar";
+                System.Diagnostics.Process.Start(new System.Diagnostics.ProcessStartInfo
+                {
+                    FileName = url,
+                    UseShellExecute = true
+                });
+                return true;
+            }
+            catch (Exception ex)
+            {
+                System.Diagnostics.Debug.WriteLine($"Error opening calendar in browser: {ex.Message}");
+                return false;
+            }
+        }
     }
 } 

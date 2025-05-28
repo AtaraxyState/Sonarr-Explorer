@@ -2,14 +2,8 @@ using System;
 
 namespace SonarrFlowLauncherPlugin.Models
 {
-    public class SonarrQueueItem
+    public class SonarrQueueItem : SonarrEpisodeBase
     {
-        public int Id { get; set; }
-        public int SeriesId { get; set; }
-        public string Title { get; set; } = string.Empty;
-        public int SeasonNumber { get; set; }
-        public int EpisodeNumber { get; set; }
-        public string Quality { get; set; } = string.Empty;
         public string Status { get; set; } = string.Empty;
         public double Progress { get; set; }
         public DateTime? EstimatedCompletionTime { get; set; }
@@ -17,14 +11,8 @@ namespace SonarrFlowLauncherPlugin.Models
         public string DownloadClient { get; set; } = string.Empty;
     }
 
-    public class SonarrHistoryItem
+    public class SonarrHistoryItem : SonarrEpisodeBase
     {
-        public int Id { get; set; }
-        public int SeriesId { get; set; }
-        public string Title { get; set; } = string.Empty;
-        public int SeasonNumber { get; set; }
-        public int EpisodeNumber { get; set; }
-        public string Quality { get; set; } = string.Empty;
         public string EventType { get; set; } = string.Empty;
         public DateTime Date { get; set; }
     }

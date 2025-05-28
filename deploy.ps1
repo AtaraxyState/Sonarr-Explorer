@@ -39,13 +39,8 @@ Copy-Item ".\SonarrFlowLauncherPlugin\plugin.yaml" $PluginDirectory -Force
 
 Write-Host "Plugin deployed to: $PluginDirectory"
 
-# Ask if user wants to start Flow Launcher
-$startFlow = Read-Host "Would you like to start Flow Launcher now? (y/n)"
-if ($startFlow -eq 'y') {
-    Write-Host "Starting Flow Launcher..."
-    Start-Process "$env:LOCALAPPDATA\FlowLauncher\Flow.Launcher.exe"
-} else {
-    Write-Host "Flow Launcher was not started. You can start it manually when ready."
-}
+# Start Flow Launcher
+Write-Host "Starting Flow Launcher..."
+Start-Process "$env:LOCALAPPDATA\FlowLauncher\Flow.Launcher.exe"
 
 Write-Host "Deployment complete!" 

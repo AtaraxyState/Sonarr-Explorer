@@ -13,7 +13,8 @@ namespace SonarrFlowLauncherPlugin.Commands
             _commands = new List<BaseCommand>
             {
                 new ActivityCommand(sonarrService, settings),
-                new LibrarySearchCommand(sonarrService, settings)
+                new LibrarySearchCommand(sonarrService, settings),
+                new CalendarCommand(sonarrService, settings)
             };
 
             _defaultCommand = new LibrarySearchCommand(sonarrService, settings);
