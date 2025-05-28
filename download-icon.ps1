@@ -1,4 +1,4 @@
-$iconUrl = "https://iconduck.com/icons/253013/sonarr"
+$iconUrl = "https://raw.githubusercontent.com/Sonarr/Sonarr/develop/Logo/256.png"
 $outputPath = ".\SonarrFlowLauncherPlugin\Images\icon.png"
 
 # Create a web client
