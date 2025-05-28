@@ -176,7 +176,7 @@ namespace SonarrFlowLauncherPlugin.Services
                 }
 
                 // Get history (last 10 items)
-                var historyUrl = $"{BaseUrl}/history?page=1&pageSize=10&sortKey=date&sortDir=desc&includeSeries=true";
+                var historyUrl = $"{BaseUrl}/history?page=1&pageSize=10&sortKey=date&sortDir=desc&includeSeries=true&includeEpisode=true";
                 var historyResponse = await _httpClient.GetStringAsync(historyUrl);
                 var historyData = JsonConvert.DeserializeObject<dynamic>(historyResponse);
 
@@ -189,8 +189,8 @@ namespace SonarrFlowLauncherPlugin.Services
                             Id = record.id,
                             SeriesId = record.seriesId,
                             Title = record.series?.title ?? record.sourceTitle ?? string.Empty,
-                            SeasonNumber = record.episode?.seasonNumber ?? 0,
-                            EpisodeNumber = record.episode?.episodeNumber ?? 0,
+                            SeasonNumber = record.episodeInfo?.seasonNumber ?? record.episode?.seasonNumber ?? 0,
+                            EpisodeNumber = record.episodeInfo?.episodeNumber ?? record.episode?.episodeNumber ?? 0,
                             Quality = record.quality?.quality?.name ?? string.Empty,
                             EventType = record.eventType ?? string.Empty,
                             Date = record.date

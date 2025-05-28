@@ -1,12 +1,12 @@
 {
     "ID": "D29D1AA0-3F6A-4F2E-8D0A-A5B7C9A5EFCF",
-    "ActionKeyword": "sonarr",
+    "ActionKeyword": "snr",
     "Name": "Sonarr Flow Launcher",
-    "Description": "Control Sonarr from Flow Launcher",
-    "Author": "Your Name",
+    "Description": "Control Sonarr from Flow Launcher. Features: View calendar, activity, and search library.",
+    "Author": "Rain",
     "Version": "1.0.0",
     "Language": "csharp",
-    "Website": "https://github.com/yourusername/SonarrFlowLauncherPlugin",
+    "Website": "https://github.com/rain9441/SonarrFlowLauncherPlugin",
     "ExecuteFileName": "SonarrFlowLauncherPlugin.dll",
     "IcoPath": "Images\\icon.png"
 } 

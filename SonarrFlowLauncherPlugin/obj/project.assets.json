@@ -312,10 +312,6 @@
             "version": "[7.0.20, 7.0.20]"
           },
           {
-            "name": "Microsoft.NETCore.App.Host.win-x64",
-            "version": "[7.0.20, 7.0.20]"
-          },
-          {
             "name": "Microsoft.NETCore.App.Ref",
             "version": "[7.0.20, 7.0.20]"
           },

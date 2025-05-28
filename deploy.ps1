@@ -27,18 +27,20 @@ if (!(Test-Path "$PluginDirectory\Images")) {
     New-Item -ItemType Directory -Path "$PluginDirectory\Images" -Force | Out-Null
 }
 
+# Clean up any temporary files
+Write-Host "Cleaning up temporary files..."
+Get-ChildItem -Path "." -Recurse -Include "*.new", "*.bak", "*.tmp" | Remove-Item -Force
+
 # Build the project
 Write-Host "Building project..."
 dotnet build .\SonarrFlowLauncherPlugin\SonarrFlowLauncherPlugin.csproj --configuration Release
 
-# Set paths
-$pluginName = "SonarrFlowLauncherPlugin"
-$buildPath = ".\bin\Release\net7.0-windows"
-# Copy plugin files
+# Copy only necessary files
 Write-Host "Copying plugin files..."
 Copy-Item ".\SonarrFlowLauncherPlugin\bin\Release\*" $PluginDirectory -Recurse -Force
 Copy-Item ".\SonarrFlowLauncherPlugin\plugin.json" $PluginDirectory -Force
 Copy-Item ".\SonarrFlowLauncherPlugin\plugin.yaml" $PluginDirectory -Force
+Copy-Item ".\SonarrFlowLauncherPlugin\Images\*" "$PluginDirectory\Images" -Force
 
 Write-Host "Plugin deployed to: $PluginDirectory"
 

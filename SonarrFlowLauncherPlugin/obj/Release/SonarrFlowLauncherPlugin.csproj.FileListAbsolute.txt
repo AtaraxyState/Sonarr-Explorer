@@ -17,6 +17,3 @@ D:\Documents\Git\FlowLauncher\Custom plugins\SonarrFlowLauncherPlugin\SonarrFlow
 D:\Documents\Git\FlowLauncher\Custom plugins\SonarrFlowLauncherPlugin\SonarrFlowLauncherPlugin\obj\Release\refint\SonarrFlowLauncherPlugin.dll
 D:\Documents\Git\FlowLauncher\Custom plugins\SonarrFlowLauncherPlugin\SonarrFlowLauncherPlugin\obj\Release\SonarrFlowLauncherPlugin.pdb
 D:\Documents\Git\FlowLauncher\Custom plugins\SonarrFlowLauncherPlugin\SonarrFlowLauncherPlugin\obj\Release\ref\SonarrFlowLauncherPlugin.dll
-D:\Documents\Git\FlowLauncher\Custom plugins\SonarrFlowLauncherPlugin\SonarrFlowLauncherPlugin\bin\Release\SonarrFlowLauncherPlugin.exe
-D:\Documents\Git\FlowLauncher\Custom plugins\SonarrFlowLauncherPlugin\SonarrFlowLauncherPlugin\bin\Release\SonarrFlowLauncherPlugin.runtimeconfig.json
-D:\Documents\Git\FlowLauncher\Custom plugins\SonarrFlowLauncherPlugin\SonarrFlowLauncherPlugin\obj\Release\SonarrFlowLauncherPlugin.genruntimeconfig.cache
