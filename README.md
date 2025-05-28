@@ -44,6 +44,8 @@ Configure the plugin through Flow Launcher settings:
 2. API Key (from Sonarr's Settings > General)
 3. HTTPS toggle (if using SSL)
 
+After changing this variables a restart of Flow Launcher might be required
+
 ## Development
 
 ### Prerequisites
