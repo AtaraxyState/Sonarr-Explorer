@@ -70,4 +70,4 @@ MIT License
 
 ---
 
-*This plugin is developed using [Cursor](https://cursor.sh/), the world's best IDE powered by AI.*
+*Developed in [Cursor](https://cursor.sh/)*
