@@ -5,6 +5,8 @@ VisualStudioVersion = 17.0.31903.59
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "SonarrFlowLauncherPlugin", "SonarrFlowLauncherPlugin\SonarrFlowLauncherPlugin.csproj", "{A38F595F-AA6C-4593-B2CC-874D0CA96482}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "SonarrFlowLauncherPlugin.Tests", "SonarrFlowLauncherPlugin.Tests\SonarrFlowLauncherPlugin.Tests.csproj", "{70A28037-09F5-4CEB-8943-C0E5720E918F}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -27,6 +29,18 @@ Global
 		{A38F595F-AA6C-4593-B2CC-874D0CA96482}.Release|x64.Build.0 = Release|Any CPU
 		{A38F595F-AA6C-4593-B2CC-874D0CA96482}.Release|x86.ActiveCfg = Release|Any CPU
 		{A38F595F-AA6C-4593-B2CC-874D0CA96482}.Release|x86.Build.0 = Release|Any CPU
+		{70A28037-09F5-4CEB-8943-C0E5720E918F}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{70A28037-09F5-4CEB-8943-C0E5720E918F}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{70A28037-09F5-4CEB-8943-C0E5720E918F}.Debug|x64.ActiveCfg = Debug|Any CPU
+		{70A28037-09F5-4CEB-8943-C0E5720E918F}.Debug|x64.Build.0 = Debug|Any CPU
+		{70A28037-09F5-4CEB-8943-C0E5720E918F}.Debug|x86.ActiveCfg = Debug|Any CPU
+		{70A28037-09F5-4CEB-8943-C0E5720E918F}.Debug|x86.Build.0 = Debug|Any CPU
+		{70A28037-09F5-4CEB-8943-C0E5720E918F}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{70A28037-09F5-4CEB-8943-C0E5720E918F}.Release|Any CPU.Build.0 = Release|Any CPU
+		{70A28037-09F5-4CEB-8943-C0E5720E918F}.Release|x64.ActiveCfg = Release|Any CPU
+		{70A28037-09F5-4CEB-8943-C0E5720E918F}.Release|x64.Build.0 = Release|Any CPU
+		{70A28037-09F5-4CEB-8943-C0E5720E918F}.Release|x86.ActiveCfg = Release|Any CPU
+		{70A28037-09F5-4CEB-8943-C0E5720E918F}.Release|x86.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
