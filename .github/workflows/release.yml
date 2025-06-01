@@ -6,6 +6,9 @@ on:
       - 'v*'
   workflow_dispatch:
 
+permissions:
+  contents: write
+
 jobs:
   build:
     runs-on: windows-latest
@@ -70,15 +73,15 @@ jobs:
       shell: pwsh
     
     - name: Create Release
-      id: create_release
-      uses: actions/create-release@v1
-      env:
-        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      uses: softprops/action-gh-release@v1
       with:
         tag_name: ${{ steps.version.outputs.TAG }}
-        release_name: "Sonarr Explorer v${{ steps.version.outputs.VERSION }}"
+        name: "Sonarr Explorer v${{ steps.version.outputs.VERSION }}"
         draft: false
         prerelease: false
+        files: |
+          SonarrFlowLauncher-${{ steps.version.outputs.VERSION }}.zip
+          SonarrFlowLauncher.zip
         body: |
           ## Sonarr Flow Launcher Plugin v${{ steps.version.outputs.VERSION }}
           
@@ -103,23 +106,5 @@ jobs:
           ### Requirements
           - Flow Launcher
           - Sonarr instance with API access
-    
-    - name: Upload Versioned Release Asset
-      uses: actions/upload-release-asset@v1
       env:
-        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-      with:
-        upload_url: ${{ steps.create_release.outputs.upload_url }}
-        asset_path: ./SonarrFlowLauncher-${{ steps.version.outputs.VERSION }}.zip
-        asset_name: SonarrFlowLauncher-${{ steps.version.outputs.VERSION }}.zip
-        asset_content_type: application/zip
-    
-    - name: Upload Latest Release Asset
-      uses: actions/upload-release-asset@v1
-      env:
-        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-      with:
-        upload_url: ${{ steps.create_release.outputs.upload_url }}
-        asset_path: ./SonarrFlowLauncher.zip
-        asset_name: SonarrFlowLauncher.zip
-        asset_content_type: application/zip 
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }} 
