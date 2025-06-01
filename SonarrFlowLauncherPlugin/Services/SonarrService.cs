@@ -5,73 +5,356 @@ using System.IO;
 
 namespace SonarrFlowLauncherPlugin.Services
 {
-    public class SonarrService
+    public class SonarrService : IDisposable
     {
         private readonly HttpClient _httpClient;
         private readonly Settings _settings;
         private readonly string _imageCache;
+        private bool _disposed;
+
+        // Constants
+        private const int DefaultPageSize = 10;
+        private const string PosterCoverType = "poster";
+        private const string ImageCacheDirName = "ImageCache";
 
         public SonarrService(Settings settings)
         {
-            _settings = settings;
-            _httpClient = new HttpClient();
-            _httpClient.DefaultRequestHeaders.Add("X-Api-Key", settings.ApiKey);
-            
-            // Set up image cache directory
-            _imageCache = Path.Combine(Path.GetDirectoryName(typeof(Settings).Assembly.Location), "ImageCache");
-            if (!Directory.Exists(_imageCache))
+            _settings = settings ?? throw new ArgumentNullException(nameof(settings));
+            _httpClient = CreateHttpClient(settings);
+            _imageCache = InitializeImageCache();
+        }
+
+        private HttpClient CreateHttpClient(Settings settings)
+        {
+            var client = new HttpClient();
+            client.DefaultRequestHeaders.Add("X-Api-Key", settings.ApiKey);
+            return client;
+        }
+
+        private string InitializeImageCache()
+        {
+            var cacheDir = Path.Combine(Path.GetDirectoryName(typeof(Settings).Assembly.Location), ImageCacheDirName);
+            if (!Directory.Exists(cacheDir))
             {
-                Directory.CreateDirectory(_imageCache);
+                Directory.CreateDirectory(cacheDir);
             }
+            return cacheDir;
         }
 
         private string BaseUrl => $"{(_settings.UseHttps ? "https" : "http")}://{_settings.ServerUrl.TrimEnd('/')}/api/v3";
+        private string WebBaseUrl => $"{(_settings.UseHttps ? "https" : "http")}://{_settings.ServerUrl.TrimEnd('/')}";
+
+        #region Series Operations
 
         public async Task<List<SonarrSeries>> SearchSeriesAsync(string query)
         {
             try
             {
                 var url = $"{BaseUrl}/series";
-                System.Diagnostics.Debug.WriteLine($"Calling Sonarr API: {url}");
-                System.Diagnostics.Debug.WriteLine($"Search query: {query}");
+                LogDebug($"Fetching series from: {url}");
 
                 var response = await _httpClient.GetStringAsync(url);
-                System.Diagnostics.Debug.WriteLine($"API Response: {response}");
-
-                var allSeries = JsonConvert.DeserializeObject<List<SonarrSeries>>(response);
-                System.Diagnostics.Debug.WriteLine($"Deserialized {allSeries?.Count ?? 0} series");
+                var allSeries = JsonConvert.DeserializeObject<List<SonarrSeries>>(response) ?? new List<SonarrSeries>();
+                
+                LogDebug($"Retrieved {allSeries.Count} series");
 
                 // Download posters for each series
-                if (allSeries != null)
+                await DownloadPostersForSeriesAsync(allSeries);
+
+                // Filter by query if provided
+                return FilterSeries(allSeries, query);
+            }
+            catch (Exception ex)
+            {
+                LogError("Error searching series", ex);
+                throw;
+            }
+        }
+
+        private async Task DownloadPostersForSeriesAsync(IEnumerable<SonarrSeries> series)
+        {
+            foreach (var seriesItem in series)
+            {
+                var posterUrl = ExtractPosterUrl(seriesItem.Images);
+                if (!string.IsNullOrEmpty(posterUrl))
                 {
-                    foreach (var series in allSeries)
+                    seriesItem.PosterPath = await DownloadPosterAsync(seriesItem.Id, posterUrl);
+                }
+            }
+        }
+
+        private List<SonarrSeries> FilterSeries(List<SonarrSeries> allSeries, string query)
+        {
+            if (string.IsNullOrWhiteSpace(query))
+                return allSeries;
+
+            return allSeries
+                .Where(s => s.Title.Contains(query, StringComparison.OrdinalIgnoreCase) || 
+                           (s.Overview?.Contains(query, StringComparison.OrdinalIgnoreCase) ?? false))
+                .ToList();
+        }
+
+        public async Task<bool> OpenSeriesInBrowser(int seriesId)
+        {
+            try
+            {
+                var url = $"{WebBaseUrl}/series/{seriesId}";
+                return OpenUrlInBrowser(url);
+            }
+            catch (Exception ex)
+            {
+                LogError($"Error opening series {seriesId} in browser", ex);
+                return false;
+            }
+        }
+
+        #endregion
+
+        #region Activity Operations
+
+        public async Task<SonarrActivity> GetActivityAsync()
+        {
+            try
+            {
+                var activity = new SonarrActivity();
+
+                // Fetch queue and history in parallel
+                var queueTask = FetchQueueItemsAsync();
+                var historyTask = FetchHistoryItemsAsync();
+
+                await Task.WhenAll(queueTask, historyTask);
+
+                activity.Queue = await queueTask;
+                activity.History = await historyTask;
+
+                return activity;
+            }
+            catch (Exception ex)
+            {
+                LogError("Error getting activity", ex);
+                throw;
+            }
+        }
+
+        private async Task<List<SonarrQueueItem>> FetchQueueItemsAsync()
+        {
+            var queueUrl = $"{BaseUrl}/queue?pageSize={DefaultPageSize}&sortKey=timeleft&sortDir=asc&includeEpisode=true&includeSeries=true";
+            var response = await _httpClient.GetStringAsync(queueUrl);
+            
+            LogDebug("Queue API Response received");
+            
+            var queueData = JsonConvert.DeserializeObject<dynamic>(response);
+            var queueItems = new List<SonarrQueueItem>();
+
+            if (queueData?.records != null)
+            {
+                foreach (var record in queueData.records)
+                {
+                    var queueItem = await ParseQueueRecordAsync(record);
+                    queueItems.Add(queueItem);
+                }
+            }
+
+            return queueItems;
+        }
+
+        private async Task<SonarrQueueItem> ParseQueueRecordAsync(dynamic record)
+        {
+            var queueItem = new SonarrQueueItem
+            {
+                Id = record.id,
+                SeriesId = record.seriesId,
+                Title = record.series?.title ?? string.Empty,
+                SeasonNumber = record.episode?.seasonNumber ?? 0,
+                EpisodeNumber = record.episode?.episodeNumber ?? 0,
+                Quality = record.quality?.quality?.name ?? string.Empty,
+                Status = record.status ?? string.Empty,
+                Progress = CalculateProgress(record),
+                EstimatedCompletionTime = record.estimatedCompletionTime,
+                Protocol = record.protocol ?? string.Empty,
+                DownloadClient = record.downloadClient ?? string.Empty
+            };
+
+            // Download poster if available
+            var posterUrl = ExtractPosterUrlFromRecord(record.series?.images);
+            if (!string.IsNullOrEmpty(posterUrl))
+            {
+                queueItem.PosterPath = await DownloadPosterAsync(queueItem.SeriesId, posterUrl);
+            }
+
+            return queueItem;
+        }
+
+        private async Task<List<SonarrHistoryItem>> FetchHistoryItemsAsync()
+        {
+            var historyUrl = $"{BaseUrl}/history?page=1&pageSize={DefaultPageSize}&sortKey=date&sortDir=desc&includeSeries=true&includeEpisode=true";
+            var response = await _httpClient.GetStringAsync(historyUrl);
+            var historyData = JsonConvert.DeserializeObject<dynamic>(response);
+            var historyItems = new List<SonarrHistoryItem>();
+
+            if (historyData?.records != null)
+            {
+                foreach (var record in historyData.records)
+                {
+                    var historyItem = await ParseHistoryRecordAsync(record);
+                    historyItems.Add(historyItem);
+                }
+            }
+
+            return historyItems;
+        }
+
+        private async Task<SonarrHistoryItem> ParseHistoryRecordAsync(dynamic record)
+        {
+            var historyItem = new SonarrHistoryItem
+            {
+                Id = record.id,
+                SeriesId = record.seriesId,
+                Title = record.series?.title ?? record.sourceTitle ?? string.Empty,
+                SeasonNumber = record.episodeInfo?.seasonNumber ?? record.episode?.seasonNumber ?? 0,
+                EpisodeNumber = record.episodeInfo?.episodeNumber ?? record.episode?.episodeNumber ?? 0,
+                Quality = record.quality?.quality?.name ?? string.Empty,
+                EventType = record.eventType ?? string.Empty,
+                Date = record.date
+            };
+
+            // Download poster if available
+            var posterUrl = ExtractPosterUrlFromRecord(record.series?.images);
+            if (!string.IsNullOrEmpty(posterUrl))
+            {
+                historyItem.PosterPath = await DownloadPosterAsync(historyItem.SeriesId, posterUrl);
+            }
+
+            return historyItem;
+        }
+
+        public async Task<bool> OpenActivityInBrowser()
+        {
+            try
+            {
+                var url = $"{WebBaseUrl}/activity";
+                return OpenUrlInBrowser(url);
+            }
+            catch (Exception ex)
+            {
+                LogError("Error opening activity in browser", ex);
+                return false;
+            }
+        }
+
+        #endregion
+
+        #region Calendar Operations
+
+        public async Task<List<SonarrCalendarItem>> GetCalendarAsync(DateTime? start = null, DateTime? end = null)
+        {
+            try
+            {
+                start ??= DateTime.Today;
+                end ??= DateTime.Today.AddDays(7);
+
+                var url = $"{BaseUrl}/calendar?start={start:yyyy-MM-dd HH:mm:ss}&end={end:yyyy-MM-dd HH:mm:ss}&includeSeries=true";
+                LogDebug($"Fetching calendar from: {url}");
+                
+                var response = await _httpClient.GetStringAsync(url);
+                var calendarData = JsonConvert.DeserializeObject<List<dynamic>>(response);
+                
+                LogDebug($"Retrieved {calendarData?.Count ?? 0} calendar items");
+
+                var calendarItems = new List<SonarrCalendarItem>();
+
+                if (calendarData != null)
+                {
+                    foreach (var item in calendarData)
                     {
-                        var poster = series.Images?.FirstOrDefault(i => i.CoverType == "poster");
-                        if (poster != null)
+                        try
                         {
-                            var posterUrl = !string.IsNullOrEmpty(poster.RemoteUrl) ? poster.RemoteUrl : poster.Url;
-                            if (!string.IsNullOrEmpty(posterUrl))
-                            {
-                                series.PosterPath = await DownloadPosterAsync(series.Id, posterUrl);
-                            }
+                            var calendarItem = await ParseCalendarItemAsync(item);
+                            calendarItems.Add(calendarItem);
+                        }
+                        catch (Exception ex)
+                        {
+                            LogError($"Error processing calendar item: {JsonConvert.SerializeObject(item)}", ex);
                         }
                     }
                 }
 
-                if (string.IsNullOrWhiteSpace(query))
-                    return allSeries ?? new List<SonarrSeries>();
-
-                return allSeries?
-                    .Where(s => s.Title.Contains(query, StringComparison.OrdinalIgnoreCase) || 
-                               (s.Overview?.Contains(query, StringComparison.OrdinalIgnoreCase) ?? false))
-                    .ToList() ?? new List<SonarrSeries>();
+                return calendarItems;
             }
             catch (Exception ex)
             {
-                System.Diagnostics.Debug.WriteLine($"Error searching series: {ex.Message}");
-                System.Diagnostics.Debug.WriteLine($"Stack trace: {ex.StackTrace}");
-                throw; // Let the main class handle the error and show it to the user
+                LogError("Error getting calendar", ex);
+                throw;
             }
+        }
+
+        private async Task<SonarrCalendarItem> ParseCalendarItemAsync(dynamic item)
+        {
+            var calendarItem = new SonarrCalendarItem
+            {
+                Id = item.id,
+                SeriesId = item.seriesId,
+                Title = item.series?.title ?? string.Empty,
+                SeriesTitle = item.series?.title ?? string.Empty,
+                EpisodeTitle = item.title ?? string.Empty,
+                SeasonNumber = item.seasonNumber ?? 0,
+                EpisodeNumber = item.episodeNumber ?? 0,
+                AirDate = item.airDate ?? DateTime.MinValue,
+                HasFile = item.hasFile ?? false,
+                Monitored = item.monitored ?? false,
+                Overview = item.overview ?? string.Empty
+            };
+
+            // Download poster if available
+            var posterUrl = ExtractPosterUrlFromRecord(item.series?.images);
+            if (!string.IsNullOrEmpty(posterUrl))
+            {
+                calendarItem.PosterPath = await DownloadPosterAsync(calendarItem.SeriesId, posterUrl);
+            }
+
+            LogDebug($"Processed calendar item: {calendarItem.Title} S{calendarItem.SeasonNumber:D2}E{calendarItem.EpisodeNumber:D2}");
+            return calendarItem;
+        }
+
+        public async Task<bool> OpenCalendarInBrowser()
+        {
+            try
+            {
+                var url = $"{WebBaseUrl}/calendar";
+                return OpenUrlInBrowser(url);
+            }
+            catch (Exception ex)
+            {
+                LogError("Error opening calendar in browser", ex);
+                return false;
+            }
+        }
+
+        #endregion
+
+        #region Helper Methods
+
+        private string ExtractPosterUrl(IEnumerable<SonarrImage> images)
+        {
+            var poster = images?.FirstOrDefault(i => i.CoverType == PosterCoverType);
+            return poster != null ? 
+                (!string.IsNullOrEmpty(poster.RemoteUrl) ? poster.RemoteUrl : poster.Url) : 
+                null;
+        }
+
+        private string ExtractPosterUrlFromRecord(dynamic images)
+        {
+            if (images == null) return null;
+
+            foreach (var image in images)
+            {
+                if ((string)image.coverType == PosterCoverType)
+                {
+                    return !string.IsNullOrEmpty((string)image.remoteUrl) ? 
+                        (string)image.remoteUrl : (string)image.url;
+                }
+            }
+            return null;
         }
 
         private async Task<string> DownloadPosterAsync(int seriesId, string posterUrl)
@@ -80,13 +363,11 @@ namespace SonarrFlowLauncherPlugin.Services
             {
                 var posterPath = Path.Combine(_imageCache, $"poster_{seriesId}.jpg");
                 
-                // Check if poster already exists in cache
+                // Check cache first
                 if (File.Exists(posterPath))
-                {
                     return posterPath;
-                }
 
-                // Download the poster
+                // Download and cache
                 var imageBytes = await _httpClient.GetByteArrayAsync(posterUrl);
                 await File.WriteAllBytesAsync(posterPath, imageBytes);
                 
@@ -94,20 +375,51 @@ namespace SonarrFlowLauncherPlugin.Services
             }
             catch (Exception ex)
             {
-                System.Diagnostics.Debug.WriteLine($"Error downloading poster: {ex.Message}");
+                LogError($"Error downloading poster for series {seriesId}", ex);
                 return null;
             }
         }
 
-        public async Task<bool> OpenSeriesInBrowser(int seriesId)
+        private double CalculateProgress(dynamic record)
         {
             try
             {
-                var baseUrl = $"{(_settings.UseHttps ? "https" : "http")}://{_settings.ServerUrl.TrimEnd('/')}";
-                var url = $"{baseUrl}/series/{seriesId}";
+                // Try to calculate from size fields (Sonarr uses 'size' for total)
+                if (record.sizeleft != null && record.size != null)
+                {
+                    long sizeLeft = (long)record.sizeleft;
+                    long sizeTotal = (long)record.size;
+                    
+                    if (sizeTotal > 0)
+                    {
+                        double progress = ((double)(sizeTotal - sizeLeft) / sizeTotal) * 100.0;
+                        LogDebug($"Calculated progress: {sizeLeft}/{sizeTotal} = {progress:F1}%");
+                        return progress;
+                    }
+                }
                 
-                System.Diagnostics.Debug.WriteLine($"Opening URL: {url}");
+                // Fallback to direct progress field
+                if (record.progress != null)
+                {
+                    double progress = (double)record.progress;
+                    LogDebug($"Using direct progress: {progress}%");
+                    return progress;
+                }
                 
+                return 0.0;
+            }
+            catch (Exception ex)
+            {
+                LogError("Error calculating progress", ex);
+                return 0.0;
+            }
+        }
+
+        private bool OpenUrlInBrowser(string url)
+        {
+            try
+            {
+                LogDebug($"Opening URL: {url}");
                 var psi = new System.Diagnostics.ProcessStartInfo
                 {
                     FileName = url,
@@ -118,274 +430,40 @@ namespace SonarrFlowLauncherPlugin.Services
             }
             catch (Exception ex)
             {
-                System.Diagnostics.Debug.WriteLine($"Error opening series in browser: {ex.Message}");
-                System.Diagnostics.Debug.WriteLine($"Stack trace: {ex.StackTrace}");
+                LogError($"Error opening URL: {url}", ex);
                 return false;
             }
         }
 
-        public async Task<SonarrActivity> GetActivityAsync()
+        #endregion
+
+        #region Logging
+
+        private void LogDebug(string message)
         {
-            try
+            System.Diagnostics.Debug.WriteLine($"[SonarrService] {message}");
+        }
+
+        private void LogError(string message, Exception ex)
+        {
+            System.Diagnostics.Debug.WriteLine($"[SonarrService] ERROR: {message}");
+            System.Diagnostics.Debug.WriteLine($"[SonarrService] Exception: {ex.Message}");
+            System.Diagnostics.Debug.WriteLine($"[SonarrService] Stack trace: {ex.StackTrace}");
+        }
+
+        #endregion
+
+        #region IDisposable
+
+        public void Dispose()
+        {
+            if (!_disposed)
             {
-                var activity = new SonarrActivity();
-
-                // Get queue (limit to 10 items)
-                var queueUrl = $"{BaseUrl}/queue?pageSize=10&sortKey=timeleft&sortDir=asc&includeEpisode=true&includeSeries=true";
-                var queueResponse = await _httpClient.GetStringAsync(queueUrl);
-                
-                // Debug: Log the raw response
-                System.Diagnostics.Debug.WriteLine($"Queue API Response: {queueResponse}");
-                
-                var queueData = JsonConvert.DeserializeObject<dynamic>(queueResponse);
-                
-                if (queueData?.records != null)
-                {
-                    foreach (var record in queueData.records)
-                    {
-                        // Debug: Log each record to see the structure
-                        System.Diagnostics.Debug.WriteLine($"Queue Record: {JsonConvert.SerializeObject(record)}");
-                        
-                        var queueItem = new SonarrQueueItem
-                        {
-                            Id = record.id,
-                            SeriesId = record.seriesId,
-                            Title = record.series?.title ?? string.Empty,
-                            SeasonNumber = record.episode?.seasonNumber ?? 0,
-                            EpisodeNumber = record.episode?.episodeNumber ?? 0,
-                            Quality = record.quality?.quality?.name ?? string.Empty,
-                            Status = record.status ?? string.Empty,
-                            Progress = CalculateProgress(record),
-                            EstimatedCompletionTime = record.estimatedCompletionTime,
-                            Protocol = record.protocol ?? string.Empty,
-                            DownloadClient = record.downloadClient ?? string.Empty
-                        };
-                        
-                        // Debug: Log the parsed progress value
-                        System.Diagnostics.Debug.WriteLine($"Raw progress value: {record.progress}, Calculated: {queueItem.Progress}");
-
-                        // Get series poster if available
-                        if (record.series?.images != null)
-                        {
-                            foreach (var image in record.series.images)
-                            {
-                                if ((string)image.coverType == "poster")
-                                {
-                                    var posterUrl = !string.IsNullOrEmpty((string)image.remoteUrl) ? (string)image.remoteUrl : (string)image.url;
-                                    if (!string.IsNullOrEmpty(posterUrl))
-                                    {
-                                        queueItem.PosterPath = await DownloadPosterAsync(queueItem.SeriesId, posterUrl);
-                                    }
-                                    break;
-                                }
-                            }
-                        }
-
-                        activity.Queue.Add(queueItem);
-                    }
-                }
-
-                // Get history (last 10 items)
-                var historyUrl = $"{BaseUrl}/history?page=1&pageSize=10&sortKey=date&sortDir=desc&includeSeries=true&includeEpisode=true";
-                var historyResponse = await _httpClient.GetStringAsync(historyUrl);
-                var historyData = JsonConvert.DeserializeObject<dynamic>(historyResponse);
-
-                if (historyData?.records != null)
-                {
-                    foreach (var record in historyData.records)
-                    {
-                        var historyItem = new SonarrHistoryItem
-                        {
-                            Id = record.id,
-                            SeriesId = record.seriesId,
-                            Title = record.series?.title ?? record.sourceTitle ?? string.Empty,
-                            SeasonNumber = record.episodeInfo?.seasonNumber ?? record.episode?.seasonNumber ?? 0,
-                            EpisodeNumber = record.episodeInfo?.episodeNumber ?? record.episode?.episodeNumber ?? 0,
-                            Quality = record.quality?.quality?.name ?? string.Empty,
-                            EventType = record.eventType ?? string.Empty,
-                            Date = record.date
-                        };
-
-                        // Get series poster if available
-                        if (record.series?.images != null)
-                        {
-                            foreach (var image in record.series.images)
-                            {
-                                if ((string)image.coverType == "poster")
-                                {
-                                    var posterUrl = !string.IsNullOrEmpty((string)image.remoteUrl) ? (string)image.remoteUrl : (string)image.url;
-                                    if (!string.IsNullOrEmpty(posterUrl))
-                                    {
-                                        historyItem.PosterPath = await DownloadPosterAsync(historyItem.SeriesId, posterUrl);
-                                    }
-                                    break;
-                                }
-                            }
-                        }
-
-                        activity.History.Add(historyItem);
-                    }
-                }
-
-                return activity;
-            }
-            catch (Exception ex)
-            {
-                System.Diagnostics.Debug.WriteLine($"Error getting activity: {ex.Message}");
-                throw;
+                _httpClient?.Dispose();
+                _disposed = true;
             }
         }
 
-        public async Task<bool> OpenActivityInBrowser()
-        {
-            try
-            {
-                var url = $"{(_settings.UseHttps ? "https" : "http")}://{_settings.ServerUrl}/activity";
-                System.Diagnostics.Process.Start(new System.Diagnostics.ProcessStartInfo
-                {
-                    FileName = url,
-                    UseShellExecute = true
-                });
-                return true;
-            }
-            catch (Exception ex)
-            {
-                System.Diagnostics.Debug.WriteLine($"Error opening activity in browser: {ex.Message}");
-                return false;
-            }
-        }
-
-        public async Task<List<SonarrCalendarItem>> GetCalendarAsync(DateTime? start = null, DateTime? end = null)
-        {
-            try
-            {
-                start ??= DateTime.Today;
-                end ??= DateTime.Today.AddDays(7); // Default to a week from today
-
-                var url = $"{BaseUrl}/calendar?start={start:yyyy-MM-dd HH:mm:ss}&end={end:yyyy-MM-dd HH:mm:ss}&includeSeries=true";
-                System.Diagnostics.Debug.WriteLine($"Calling Sonarr Calendar API: {url}");
-                
-                var response = await _httpClient.GetStringAsync(url);
-                System.Diagnostics.Debug.WriteLine($"Calendar API Response: {response}");
-                
-                var calendarData = JsonConvert.DeserializeObject<List<dynamic>>(response);
-                System.Diagnostics.Debug.WriteLine($"Deserialized {calendarData?.Count ?? 0} calendar items");
-
-                var calendarItems = new List<SonarrCalendarItem>();
-
-                if (calendarData != null)
-                {
-                    foreach (var item in calendarData)
-                    {
-                        try
-                        {
-                            var calendarItem = new SonarrCalendarItem
-                            {
-                                Id = item.id,
-                                SeriesId = item.seriesId,
-                                Title = item.series?.title ?? string.Empty,
-                                SeriesTitle = item.series?.title ?? string.Empty,
-                                EpisodeTitle = item.title ?? string.Empty,
-                                SeasonNumber = item.seasonNumber ?? 0,
-                                EpisodeNumber = item.episodeNumber ?? 0,
-                                AirDate = item.airDate ?? DateTime.MinValue,
-                                HasFile = item.hasFile ?? false,
-                                Monitored = item.monitored ?? false,
-                                Overview = item.overview ?? string.Empty
-                            };
-
-                            // Get series poster if available
-                            if (item.series?.images != null)
-                            {
-                                foreach (var image in item.series.images)
-                                {
-                                    if ((string)image.coverType == "poster")
-                                    {
-                                        var posterUrl = !string.IsNullOrEmpty((string)image.remoteUrl) ? (string)image.remoteUrl : (string)image.url;
-                                        if (!string.IsNullOrEmpty(posterUrl))
-                                        {
-                                            calendarItem.PosterPath = await DownloadPosterAsync(calendarItem.SeriesId, posterUrl);
-                                        }
-                                        break;
-                                    }
-                                }
-                            }
-
-                            calendarItems.Add(calendarItem);
-                            System.Diagnostics.Debug.WriteLine($"Added calendar item: {calendarItem.Title} S{calendarItem.SeasonNumber:D2}E{calendarItem.EpisodeNumber:D2} - {calendarItem.EpisodeTitle}");
-                        }
-                        catch (Exception ex)
-                        {
-                            System.Diagnostics.Debug.WriteLine($"Error processing calendar item: {ex.Message}");
-                            System.Diagnostics.Debug.WriteLine($"Raw item data: {JsonConvert.SerializeObject(item)}");
-                        }
-                    }
-                }
-
-                return calendarItems;
-            }
-            catch (Exception ex)
-            {
-                System.Diagnostics.Debug.WriteLine($"Error getting calendar: {ex.Message}");
-                System.Diagnostics.Debug.WriteLine($"Stack trace: {ex.StackTrace}");
-                throw;
-            }
-        }
-
-        public async Task<bool> OpenCalendarInBrowser()
-        {
-            try
-            {
-                var url = $"{(_settings.UseHttps ? "https" : "http")}://{_settings.ServerUrl}/calendar";
-                System.Diagnostics.Process.Start(new System.Diagnostics.ProcessStartInfo
-                {
-                    FileName = url,
-                    UseShellExecute = true
-                });
-                return true;
-            }
-            catch (Exception ex)
-            {
-                System.Diagnostics.Debug.WriteLine($"Error opening calendar in browser: {ex.Message}");
-                return false;
-            }
-        }
-
-        private double CalculateProgress(dynamic record)
-        {
-            try
-            {
-                // Try to calculate from sizeleft and size first (Sonarr uses 'size' for total, not 'sizetotal')
-                if (record.sizeleft != null && record.size != null)
-                {
-                    long sizeLeft = (long)record.sizeleft;
-                    long sizeTotal = (long)record.size;
-                    
-                    if (sizeTotal > 0)
-                    {
-                        // Progress = (total - left) / total * 100
-                        double progress = ((double)(sizeTotal - sizeLeft) / sizeTotal) * 100.0;
-                        System.Diagnostics.Debug.WriteLine($"Calculated progress from size: {sizeLeft}/{sizeTotal} = {progress:F1}%");
-                        return progress;
-                    }
-                }
-                
-                // Fallback to direct progress field
-                if (record.progress != null)
-                {
-                    double progress = (double)record.progress;
-                    System.Diagnostics.Debug.WriteLine($"Using direct progress field: {progress}");
-                    return progress;
-                }
-                
-                System.Diagnostics.Debug.WriteLine($"No progress information available in record");
-                return 0.0;
-            }
-            catch (Exception ex)
-            {
-                System.Diagnostics.Debug.WriteLine($"Error calculating progress: {ex.Message}");
-                return 0.0;
-            }
-        }
+        #endregion
     }
 } 
