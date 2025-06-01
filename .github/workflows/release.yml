@@ -21,10 +21,11 @@ jobs:
     - name: Extract version from tag
       id: version
       run: |
-        $tag = "${{ github.ref_name }}"
+        $tag = "${{ github.ref }}" -replace 'refs/tags/', ''
         $version = $tag -replace '^v', ''
         echo "VERSION=$version" >> $env:GITHUB_OUTPUT
         echo "TAG=$tag" >> $env:GITHUB_OUTPUT
+        Write-Host "Extracted version: $version from tag: $tag"
       shell: pwsh
     
     - name: Update plugin.json version
@@ -32,6 +33,7 @@ jobs:
         $pluginJson = Get-Content "SonarrFlowLauncherPlugin/plugin.json" | ConvertFrom-Json
         $pluginJson.Version = "${{ steps.version.outputs.VERSION }}"
         $pluginJson | ConvertTo-Json -Depth 10 | Set-Content "SonarrFlowLauncherPlugin/plugin.json"
+        Write-Host "Updated plugin.json version to: ${{ steps.version.outputs.VERSION }}"
       shell: pwsh
     
     - name: Restore dependencies
@@ -63,6 +65,8 @@ jobs:
         
         # Also create zip without version for latest download link
         Compress-Archive -Path $pluginDir -DestinationPath "SonarrFlowLauncher.zip"
+        
+        Write-Host "Created packages: SonarrFlowLauncher-$version.zip and SonarrFlowLauncher.zip"
       shell: pwsh
     
     - name: Create Release
@@ -84,6 +88,11 @@ jobs:
           - 📅 **Calendar View** (`snr -c`): View upcoming episodes
           - 📊 **Activity Monitor** (`snr -a`): View downloads and history
           - 🔍 **Library Search** (`snr -l`): Search your series library
+          
+          ### New in this release
+          - 🔥 **Hot-reloading settings** - No restart required when changing settings!
+          - 🐛 **Fixed series URLs** - Now opens correct Sonarr web pages
+          - 🚀 **Improved build pipeline** - Better release packaging
           
           ### Installation
           Download and extract to your Flow Launcher plugins directory, or install via:
