@@ -6,7 +6,7 @@
     "Author": "Rain",
     "Version": "1.0.0",
     "Language": "csharp",
-    "Website": "https://github.com/rain9441/SonarrFlowLauncherPlugin",
+    "Website": "https://github.com/AtaraxyState/Sonarr-Explorer",
     "ExecuteFileName": "SonarrFlowLauncherPlugin.dll",
     "IcoPath": "Images\\icon.png"
 } 

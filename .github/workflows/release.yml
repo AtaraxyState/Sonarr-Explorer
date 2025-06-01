@@ -1,0 +1,67 @@
+name: Release
+
+on:
+  push:
+    tags:
+      - 'v*'
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: windows-latest
+    
+    steps:
+    - uses: actions/checkout@v4
+    
+    - name: Setup .NET
+      uses: actions/setup-dotnet@v4
+      with:
+        dotnet-version: '7.0.x'
+    
+    - name: Restore dependencies
+      run: dotnet restore SonarrFlowLauncherPlugin/SonarrFlowLauncherPlugin.csproj
+    
+    - name: Build
+      run: dotnet build SonarrFlowLauncherPlugin/SonarrFlowLauncherPlugin.csproj --configuration Release --no-restore
+    
+    - name: Create plugin package
+      run: |
+        $pluginDir = "SonarrFlowLauncher"
+        New-Item -ItemType Directory -Path $pluginDir -Force
+        
+        # Copy main plugin files from correct path
+        Copy-Item "SonarrFlowLauncherPlugin/bin/Release/*" $pluginDir -Recurse -Force
+        
+        # Ensure plugin.json is in the root
+        Copy-Item "SonarrFlowLauncherPlugin/plugin.json" $pluginDir -Force
+        
+        # Include README for users
+        Copy-Item "README.md" $pluginDir -Force
+        
+        # Copy Images folder
+        Copy-Item "SonarrFlowLauncherPlugin/Images" $pluginDir -Recurse -Force
+        
+        # Create zip
+        Compress-Archive -Path $pluginDir -DestinationPath "SonarrFlowLauncher.zip"
+      shell: pwsh
+    
+    - name: Create Release
+      id: create_release
+      uses: actions/create-release@v1
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      with:
+        tag_name: ${{ github.ref }}
+        release_name: Release ${{ github.ref }}
+        draft: false
+        prerelease: false
+    
+    - name: Upload Release Asset
+      uses: actions/upload-release-asset@v1
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      with:
+        upload_url: ${{ steps.create_release.outputs.upload_url }}
+        asset_path: ./SonarrFlowLauncher.zip
+        asset_name: SonarrFlowLauncher.zip
+        asset_content_type: application/zip 
