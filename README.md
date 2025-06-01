@@ -68,6 +68,7 @@ snr -a history           # Download history
 #### 🔍 Library Search
 ```
 snr -l [search term]     # Search your library
+snr -l                   # Show all series in your library
 snr [search term]        # Search your library (default)
 ```
 
@@ -120,6 +121,9 @@ snr -reddit            # Direct Reddit access
 # Search for a series
 snr breaking bad
 
+# Browse all series in your library
+snr -l
+
 # See today's episodes
 snr -c
 
@@ -142,10 +146,11 @@ snr -date
 ## Features in Detail
 
 ### Library Search
-- Search through your entire Sonarr library
+- Search through your entire Sonarr library or browse all series
 - Shows series title, year, status, and statistics
 - Direct links to series in Sonarr web interface
 - Displays cover art and overview
+- Use without search term to view complete library
 
 ### Calendar View
 - Upcoming episodes with air dates and times
