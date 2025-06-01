@@ -32,7 +32,6 @@ namespace SonarrFlowLauncherPlugin.Commands
 
                 var activity = SonarrService.GetActivityAsync().Result;
                 var totalItems = 0;
-                const int maxItems = 10;
 
                 // Show help if no specific filter
                 if (string.IsNullOrWhiteSpace(searchQuery))
@@ -66,8 +65,6 @@ namespace SonarrFlowLauncherPlugin.Commands
                         {
                             foreach (var item in activity.Queue)
                             {
-                                if (totalItems >= maxItems) break;
-                                
                                 results.Add(new Result
                                 {
                                     Title = $"⬇️ {item.Title}",
@@ -97,8 +94,6 @@ namespace SonarrFlowLauncherPlugin.Commands
                         {
                             foreach (var item in activity.History)
                             {
-                                if (totalItems >= maxItems) break;
-
                                 var icon = item.EventType.ToLower() switch
                                 {
                                     "grabbed" => "⬇️",
@@ -126,8 +121,6 @@ namespace SonarrFlowLauncherPlugin.Commands
                         // Add queue items (prioritize these)
                         foreach (var item in activity.Queue)
                         {
-                            if (totalItems >= maxItems) break;
-                            
                             results.Add(new Result
                             {
                                 Title = $"⬇️ {item.Title}",
@@ -141,8 +134,6 @@ namespace SonarrFlowLauncherPlugin.Commands
                         // Add history items (fill remaining slots)
                         foreach (var item in activity.History)
                         {
-                            if (totalItems >= maxItems) break;
-
                             var icon = item.EventType.ToLower() switch
                             {
                                 "grabbed" => "⬇️",

@@ -119,7 +119,7 @@ namespace SonarrFlowLauncherPlugin.Tests.Commands
         }
 
         [TestMethod]
-        public void Execute_MaxItems_LimitsTo10Items()
+        public void Execute_MaxItems_ShowsAllItems()
         {
             // Arrange
             var activity = new SonarrActivity
@@ -146,7 +146,7 @@ namespace SonarrFlowLauncherPlugin.Tests.Commands
             var results = _command.Execute(query);
 
             // Assert
-            Assert.AreEqual(11, results.Count); // 10 items + Open in browser
+            Assert.AreEqual(31, results.Count); // 30 items (15 queue + 15 history) + Open in browser
         }
 
         [TestMethod]

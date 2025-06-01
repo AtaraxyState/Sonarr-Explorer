@@ -20,7 +20,7 @@ namespace SonarrApiTester
                 using (var httpClient = new HttpClient())
                 {
                     httpClient.DefaultRequestHeaders.Add("X-Api-Key", "411208c5131742b7b5e5c42317f785f7");
-                    var queueUrl = "http://localhost:8989/api/v3/queue?pageSize=10&sortKey=timeleft&sortDir=asc&includeEpisode=true&includeSeries=true";
+                    var queueUrl = "http://localhost:8989/api/v3/queue?sortKey=timeleft&sortDir=asc&includeEpisode=true&includeSeries=true";
                     
                     Console.WriteLine($"\nCalling: {queueUrl}");
                     var rawResponse = await httpClient.GetStringAsync(queueUrl);
