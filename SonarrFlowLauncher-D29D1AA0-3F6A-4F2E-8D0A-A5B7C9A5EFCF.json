@@ -3,7 +3,7 @@
   "Name": "Sonarr Flow Launcher",
   "Description": "Control Sonarr from Flow Launcher. Features: View calendar, activity, and search library.",
   "Author": "Rain",
-  "Version": "1.0.0",
+  "Version": "1.0.1",
   "Language": "csharp",
   "Website": "https://github.com/AtaraxyState/Sonarr-Explorer",
   "UrlDownload": "https://github.com/AtaraxyState/Sonarr-Explorer/releases/latest/download/SonarrFlowLauncher.zip",

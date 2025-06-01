@@ -18,6 +18,22 @@ jobs:
       with:
         dotnet-version: '7.0.x'
     
+    - name: Extract version from tag
+      id: version
+      run: |
+        $tag = "${{ github.ref_name }}"
+        $version = $tag -replace '^v', ''
+        echo "VERSION=$version" >> $env:GITHUB_OUTPUT
+        echo "TAG=$tag" >> $env:GITHUB_OUTPUT
+      shell: pwsh
+    
+    - name: Update plugin.json version
+      run: |
+        $pluginJson = Get-Content "SonarrFlowLauncherPlugin/plugin.json" | ConvertFrom-Json
+        $pluginJson.Version = "${{ steps.version.outputs.VERSION }}"
+        $pluginJson | ConvertTo-Json -Depth 10 | Set-Content "SonarrFlowLauncherPlugin/plugin.json"
+      shell: pwsh
+    
     - name: Restore dependencies
       run: dotnet restore SonarrFlowLauncherPlugin/SonarrFlowLauncherPlugin.csproj
     
@@ -26,13 +42,14 @@ jobs:
     
     - name: Create plugin package
       run: |
-        $pluginDir = "SonarrFlowLauncher"
+        $version = "${{ steps.version.outputs.VERSION }}"
+        $pluginDir = "SonarrFlowLauncher-$version"
         New-Item -ItemType Directory -Path $pluginDir -Force
         
         # Copy main plugin files from correct path
         Copy-Item "SonarrFlowLauncherPlugin/bin/Release/*" $pluginDir -Recurse -Force
         
-        # Ensure plugin.json is in the root
+        # Ensure plugin.json is in the root (with updated version)
         Copy-Item "SonarrFlowLauncherPlugin/plugin.json" $pluginDir -Force
         
         # Include README for users
@@ -41,7 +58,10 @@ jobs:
         # Copy Images folder
         Copy-Item "SonarrFlowLauncherPlugin/Images" $pluginDir -Recurse -Force
         
-        # Create zip
+        # Create zip with version in name
+        Compress-Archive -Path $pluginDir -DestinationPath "SonarrFlowLauncher-$version.zip"
+        
+        # Also create zip without version for latest download link
         Compress-Archive -Path $pluginDir -DestinationPath "SonarrFlowLauncher.zip"
       shell: pwsh
     
@@ -51,12 +71,41 @@ jobs:
       env:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       with:
-        tag_name: ${{ github.ref }}
-        release_name: Release ${{ github.ref }}
+        tag_name: ${{ steps.version.outputs.TAG }}
+        release_name: "Sonarr Explorer v${{ steps.version.outputs.VERSION }}"
         draft: false
         prerelease: false
+        body: |
+          ## Sonarr Flow Launcher Plugin v${{ steps.version.outputs.VERSION }}
+          
+          Control Sonarr directly from Flow Launcher!
+          
+          ### Features
+          - 📅 **Calendar View** (`snr -c`): View upcoming episodes
+          - 📊 **Activity Monitor** (`snr -a`): View downloads and history
+          - 🔍 **Library Search** (`snr -l`): Search your series library
+          
+          ### Installation
+          Download and extract to your Flow Launcher plugins directory, or install via:
+          ```
+          pm install https://github.com/AtaraxyState/Sonarr-Explorer/releases/latest/download/SonarrFlowLauncher.zip
+          ```
+          
+          ### Requirements
+          - Flow Launcher
+          - Sonarr instance with API access
     
-    - name: Upload Release Asset
+    - name: Upload Versioned Release Asset
+      uses: actions/upload-release-asset@v1
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      with:
+        upload_url: ${{ steps.create_release.outputs.upload_url }}
+        asset_path: ./SonarrFlowLauncher-${{ steps.version.outputs.VERSION }}.zip
+        asset_name: SonarrFlowLauncher-${{ steps.version.outputs.VERSION }}.zip
+        asset_content_type: application/zip
+    
+    - name: Upload Latest Release Asset
       uses: actions/upload-release-asset@v1
       env:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
