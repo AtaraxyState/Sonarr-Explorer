@@ -13,7 +13,7 @@ using System.Reflection;
 [assembly: System.Reflection.AssemblyCompanyAttribute("SonarrApiTester")]
 [assembly: System.Reflection.AssemblyConfigurationAttribute("Debug")]
 [assembly: System.Reflection.AssemblyFileVersionAttribute("1.0.0.0")]
-[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+cedd802f2105034ddb41c1f434a3496fb7620b3f")]
+[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+f85e513d29df85ad23060349f2d64a5759ab328c")]
 [assembly: System.Reflection.AssemblyProductAttribute("SonarrApiTester")]
 [assembly: System.Reflection.AssemblyTitleAttribute("SonarrApiTester")]
 [assembly: System.Reflection.AssemblyVersionAttribute("1.0.0.0")]

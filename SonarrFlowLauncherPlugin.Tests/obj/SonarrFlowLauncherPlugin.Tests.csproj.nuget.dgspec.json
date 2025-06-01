@@ -1,17 +1,17 @@
 {
   "format": 1,
   "restore": {
-    "D:\\Documents\\Git\\FlowLauncher\\Custom plugins\\SonarrFlowLauncherPlugin\\SonarrFlowLauncherPlugin.Tests\\SonarrFlowLauncherPlugin.Tests.csproj": {}
+    "D:\\Documents\\Git\\FlowLauncher\\Custom plugins\\SonarrExplorer\\SonarrFlowLauncherPlugin.Tests\\SonarrFlowLauncherPlugin.Tests.csproj": {}
   },
   "projects": {
-    "D:\\Documents\\Git\\FlowLauncher\\Custom plugins\\SonarrFlowLauncherPlugin\\SonarrFlowLauncherPlugin.Tests\\SonarrFlowLauncherPlugin.Tests.csproj": {
+    "D:\\Documents\\Git\\FlowLauncher\\Custom plugins\\SonarrExplorer\\SonarrFlowLauncherPlugin.Tests\\SonarrFlowLauncherPlugin.Tests.csproj": {
       "version": "1.0.0",
       "restore": {
-        "projectUniqueName": "D:\\Documents\\Git\\FlowLauncher\\Custom plugins\\SonarrFlowLauncherPlugin\\SonarrFlowLauncherPlugin.Tests\\SonarrFlowLauncherPlugin.Tests.csproj",
+        "projectUniqueName": "D:\\Documents\\Git\\FlowLauncher\\Custom plugins\\SonarrExplorer\\SonarrFlowLauncherPlugin.Tests\\SonarrFlowLauncherPlugin.Tests.csproj",
         "projectName": "SonarrFlowLauncherPlugin.Tests",
-        "projectPath": "D:\\Documents\\Git\\FlowLauncher\\Custom plugins\\SonarrFlowLauncherPlugin\\SonarrFlowLauncherPlugin.Tests\\SonarrFlowLauncherPlugin.Tests.csproj",
+        "projectPath": "D:\\Documents\\Git\\FlowLauncher\\Custom plugins\\SonarrExplorer\\SonarrFlowLauncherPlugin.Tests\\SonarrFlowLauncherPlugin.Tests.csproj",
         "packagesPath": "C:\\Users\\Rain\\.nuget\\packages\\",
-        "outputPath": "D:\\Documents\\Git\\FlowLauncher\\Custom plugins\\SonarrFlowLauncherPlugin\\SonarrFlowLauncherPlugin.Tests\\obj\\",
+        "outputPath": "D:\\Documents\\Git\\FlowLauncher\\Custom plugins\\SonarrExplorer\\SonarrFlowLauncherPlugin.Tests\\obj\\",
         "projectStyle": "PackageReference",
         "configFilePaths": [
           "C:\\Users\\Rain\\AppData\\Roaming\\NuGet\\NuGet.Config",
@@ -28,8 +28,8 @@
           "net7.0-windows7.0": {
             "targetAlias": "net7.0-windows",
             "projectReferences": {
-              "D:\\Documents\\Git\\FlowLauncher\\Custom plugins\\SonarrFlowLauncherPlugin\\SonarrFlowLauncherPlugin\\SonarrFlowLauncherPlugin.csproj": {
-                "projectPath": "D:\\Documents\\Git\\FlowLauncher\\Custom plugins\\SonarrFlowLauncherPlugin\\SonarrFlowLauncherPlugin\\SonarrFlowLauncherPlugin.csproj"
+              "D:\\Documents\\Git\\FlowLauncher\\Custom plugins\\SonarrExplorer\\SonarrFlowLauncherPlugin\\SonarrFlowLauncherPlugin.csproj": {
+                "projectPath": "D:\\Documents\\Git\\FlowLauncher\\Custom plugins\\SonarrExplorer\\SonarrFlowLauncherPlugin\\SonarrFlowLauncherPlugin.csproj"
               }
             }
           }
@@ -101,14 +101,14 @@
         }
       }
     },
-    "D:\\Documents\\Git\\FlowLauncher\\Custom plugins\\SonarrFlowLauncherPlugin\\SonarrFlowLauncherPlugin\\SonarrFlowLauncherPlugin.csproj": {
+    "D:\\Documents\\Git\\FlowLauncher\\Custom plugins\\SonarrExplorer\\SonarrFlowLauncherPlugin\\SonarrFlowLauncherPlugin.csproj": {
       "version": "1.0.0",
       "restore": {
-        "projectUniqueName": "D:\\Documents\\Git\\FlowLauncher\\Custom plugins\\SonarrFlowLauncherPlugin\\SonarrFlowLauncherPlugin\\SonarrFlowLauncherPlugin.csproj",
+        "projectUniqueName": "D:\\Documents\\Git\\FlowLauncher\\Custom plugins\\SonarrExplorer\\SonarrFlowLauncherPlugin\\SonarrFlowLauncherPlugin.csproj",
         "projectName": "SonarrFlowLauncherPlugin",
-        "projectPath": "D:\\Documents\\Git\\FlowLauncher\\Custom plugins\\SonarrFlowLauncherPlugin\\SonarrFlowLauncherPlugin\\SonarrFlowLauncherPlugin.csproj",
+        "projectPath": "D:\\Documents\\Git\\FlowLauncher\\Custom plugins\\SonarrExplorer\\SonarrFlowLauncherPlugin\\SonarrFlowLauncherPlugin.csproj",
         "packagesPath": "C:\\Users\\Rain\\.nuget\\packages\\",
-        "outputPath": "D:\\Documents\\Git\\FlowLauncher\\Custom plugins\\SonarrFlowLauncherPlugin\\SonarrFlowLauncherPlugin\\obj\\",
+        "outputPath": "D:\\Documents\\Git\\FlowLauncher\\Custom plugins\\SonarrExplorer\\SonarrFlowLauncherPlugin\\obj\\",
         "projectStyle": "PackageReference",
         "configFilePaths": [
           "C:\\Users\\Rain\\AppData\\Roaming\\NuGet\\NuGet.Config",
@@ -170,10 +170,6 @@
           "downloadDependencies": [
             {
               "name": "Microsoft.AspNetCore.App.Ref",
-              "version": "[7.0.20, 7.0.20]"
-            },
-            {
-              "name": "Microsoft.NETCore.App.Host.win-x64",
               "version": "[7.0.20, 7.0.20]"
             },
             {

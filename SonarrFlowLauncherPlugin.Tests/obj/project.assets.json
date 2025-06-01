@@ -2034,11 +2034,11 @@
   "project": {
     "version": "1.0.0",
     "restore": {
-      "projectUniqueName": "D:\\Documents\\Git\\FlowLauncher\\Custom plugins\\SonarrFlowLauncherPlugin\\SonarrFlowLauncherPlugin.Tests\\SonarrFlowLauncherPlugin.Tests.csproj",
+      "projectUniqueName": "D:\\Documents\\Git\\FlowLauncher\\Custom plugins\\SonarrExplorer\\SonarrFlowLauncherPlugin.Tests\\SonarrFlowLauncherPlugin.Tests.csproj",
       "projectName": "SonarrFlowLauncherPlugin.Tests",
-      "projectPath": "D:\\Documents\\Git\\FlowLauncher\\Custom plugins\\SonarrFlowLauncherPlugin\\SonarrFlowLauncherPlugin.Tests\\SonarrFlowLauncherPlugin.Tests.csproj",
+      "projectPath": "D:\\Documents\\Git\\FlowLauncher\\Custom plugins\\SonarrExplorer\\SonarrFlowLauncherPlugin.Tests\\SonarrFlowLauncherPlugin.Tests.csproj",
       "packagesPath": "C:\\Users\\Rain\\.nuget\\packages\\",
-      "outputPath": "D:\\Documents\\Git\\FlowLauncher\\Custom plugins\\SonarrFlowLauncherPlugin\\SonarrFlowLauncherPlugin.Tests\\obj\\",
+      "outputPath": "D:\\Documents\\Git\\FlowLauncher\\Custom plugins\\SonarrExplorer\\SonarrFlowLauncherPlugin.Tests\\obj\\",
       "projectStyle": "PackageReference",
       "configFilePaths": [
         "C:\\Users\\Rain\\AppData\\Roaming\\NuGet\\NuGet.Config",
@@ -2055,8 +2055,8 @@
         "net7.0-windows7.0": {
           "targetAlias": "net7.0-windows",
           "projectReferences": {
-            "D:\\Documents\\Git\\FlowLauncher\\Custom plugins\\SonarrFlowLauncherPlugin\\SonarrFlowLauncherPlugin\\SonarrFlowLauncherPlugin.csproj": {
-              "projectPath": "D:\\Documents\\Git\\FlowLauncher\\Custom plugins\\SonarrFlowLauncherPlugin\\SonarrFlowLauncherPlugin\\SonarrFlowLauncherPlugin.csproj"
+            "D:\\Documents\\Git\\FlowLauncher\\Custom plugins\\SonarrExplorer\\SonarrFlowLauncherPlugin\\SonarrFlowLauncherPlugin.csproj": {
+              "projectPath": "D:\\Documents\\Git\\FlowLauncher\\Custom plugins\\SonarrExplorer\\SonarrFlowLauncherPlugin\\SonarrFlowLauncherPlugin.csproj"
             }
           }
         }

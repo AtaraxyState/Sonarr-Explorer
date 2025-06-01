@@ -133,12 +133,19 @@ namespace SonarrFlowLauncherPlugin.Services
                 // Get queue (limit to 10 items)
                 var queueUrl = $"{BaseUrl}/queue?pageSize=10&sortKey=timeleft&sortDir=asc&includeEpisode=true&includeSeries=true";
                 var queueResponse = await _httpClient.GetStringAsync(queueUrl);
+                
+                // Debug: Log the raw response
+                System.Diagnostics.Debug.WriteLine($"Queue API Response: {queueResponse}");
+                
                 var queueData = JsonConvert.DeserializeObject<dynamic>(queueResponse);
                 
                 if (queueData?.records != null)
                 {
                     foreach (var record in queueData.records)
                     {
+                        // Debug: Log each record to see the structure
+                        System.Diagnostics.Debug.WriteLine($"Queue Record: {JsonConvert.SerializeObject(record)}");
+                        
                         var queueItem = new SonarrQueueItem
                         {
                             Id = record.id,
@@ -148,11 +155,14 @@ namespace SonarrFlowLauncherPlugin.Services
                             EpisodeNumber = record.episode?.episodeNumber ?? 0,
                             Quality = record.quality?.quality?.name ?? string.Empty,
                             Status = record.status ?? string.Empty,
-                            Progress = record.progress ?? 0.0,
+                            Progress = CalculateProgress(record),
                             EstimatedCompletionTime = record.estimatedCompletionTime,
                             Protocol = record.protocol ?? string.Empty,
                             DownloadClient = record.downloadClient ?? string.Empty
                         };
+                        
+                        // Debug: Log the parsed progress value
+                        System.Diagnostics.Debug.WriteLine($"Raw progress value: {record.progress}, Calculated: {queueItem.Progress}");
 
                         // Get series poster if available
                         if (record.series?.images != null)
@@ -338,6 +348,43 @@ namespace SonarrFlowLauncherPlugin.Services
             {
                 System.Diagnostics.Debug.WriteLine($"Error opening calendar in browser: {ex.Message}");
                 return false;
+            }
+        }
+
+        private double CalculateProgress(dynamic record)
+        {
+            try
+            {
+                // Try to calculate from sizeleft and size first (Sonarr uses 'size' for total, not 'sizetotal')
+                if (record.sizeleft != null && record.size != null)
+                {
+                    long sizeLeft = (long)record.sizeleft;
+                    long sizeTotal = (long)record.size;
+                    
+                    if (sizeTotal > 0)
+                    {
+                        // Progress = (total - left) / total * 100
+                        double progress = ((double)(sizeTotal - sizeLeft) / sizeTotal) * 100.0;
+                        System.Diagnostics.Debug.WriteLine($"Calculated progress from size: {sizeLeft}/{sizeTotal} = {progress:F1}%");
+                        return progress;
+                    }
+                }
+                
+                // Fallback to direct progress field
+                if (record.progress != null)
+                {
+                    double progress = (double)record.progress;
+                    System.Diagnostics.Debug.WriteLine($"Using direct progress field: {progress}");
+                    return progress;
+                }
+                
+                System.Diagnostics.Debug.WriteLine($"No progress information available in record");
+                return 0.0;
+            }
+            catch (Exception ex)
+            {
+                System.Diagnostics.Debug.WriteLine($"Error calculating progress: {ex.Message}");
+                return 0.0;
             }
         }
     }

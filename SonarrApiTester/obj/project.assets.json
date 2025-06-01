@@ -264,11 +264,11 @@
   "project": {
     "version": "1.0.0",
     "restore": {
-      "projectUniqueName": "D:\\Documents\\Git\\FlowLauncher\\Custom plugins\\SonarrFlowLauncherPlugin\\SonarrApiTester\\SonarrApiTester.csproj",
+      "projectUniqueName": "D:\\Documents\\Git\\FlowLauncher\\Custom plugins\\SonarrExplorer\\SonarrApiTester\\SonarrApiTester.csproj",
       "projectName": "SonarrApiTester",
-      "projectPath": "D:\\Documents\\Git\\FlowLauncher\\Custom plugins\\SonarrFlowLauncherPlugin\\SonarrApiTester\\SonarrApiTester.csproj",
+      "projectPath": "D:\\Documents\\Git\\FlowLauncher\\Custom plugins\\SonarrExplorer\\SonarrApiTester\\SonarrApiTester.csproj",
       "packagesPath": "C:\\Users\\Rain\\.nuget\\packages\\",
-      "outputPath": "D:\\Documents\\Git\\FlowLauncher\\Custom plugins\\SonarrFlowLauncherPlugin\\SonarrApiTester\\obj\\",
+      "outputPath": "D:\\Documents\\Git\\FlowLauncher\\Custom plugins\\SonarrExplorer\\SonarrApiTester\\obj\\",
       "projectStyle": "PackageReference",
       "configFilePaths": [
         "C:\\Users\\Rain\\AppData\\Roaming\\NuGet\\NuGet.Config",
@@ -285,8 +285,8 @@
         "net7.0-windows7.0": {
           "targetAlias": "net7.0-windows",
           "projectReferences": {
-            "D:\\Documents\\Git\\FlowLauncher\\Custom plugins\\SonarrFlowLauncherPlugin\\SonarrFlowLauncherPlugin\\SonarrFlowLauncherPlugin.csproj": {
-              "projectPath": "D:\\Documents\\Git\\FlowLauncher\\Custom plugins\\SonarrFlowLauncherPlugin\\SonarrFlowLauncherPlugin\\SonarrFlowLauncherPlugin.csproj"
+            "D:\\Documents\\Git\\FlowLauncher\\Custom plugins\\SonarrExplorer\\SonarrFlowLauncherPlugin\\SonarrFlowLauncherPlugin.csproj": {
+              "projectPath": "D:\\Documents\\Git\\FlowLauncher\\Custom plugins\\SonarrExplorer\\SonarrFlowLauncherPlugin\\SonarrFlowLauncherPlugin.csproj"
             }
           }
         }

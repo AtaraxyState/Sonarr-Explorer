@@ -1,8 +1,8 @@
 {
   "version": 2,
-  "dgSpecHash": "OguhdlR1myc=",
+  "dgSpecHash": "kaATzTh9MYo=",
   "success": true,
-  "projectFilePath": "D:\\Documents\\Git\\FlowLauncher\\Custom plugins\\SonarrFlowLauncherPlugin\\SonarrFlowLauncherPlugin.Tests\\SonarrFlowLauncherPlugin.Tests.csproj",
+  "projectFilePath": "D:\\Documents\\Git\\FlowLauncher\\Custom plugins\\SonarrExplorer\\SonarrFlowLauncherPlugin.Tests\\SonarrFlowLauncherPlugin.Tests.csproj",
   "expectedPackageFiles": [
     "C:\\Users\\Rain\\.nuget\\packages\\castle.core\\5.1.1\\castle.core.5.1.1.nupkg.sha512",
     "C:\\Users\\Rain\\.nuget\\packages\\flow.launcher.plugin\\4.4.0\\flow.launcher.plugin.4.4.0.nupkg.sha512",

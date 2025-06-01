@@ -13,7 +13,7 @@ using System.Reflection;
 [assembly: System.Reflection.AssemblyCompanyAttribute("SonarrFlowLauncherPlugin")]
 [assembly: System.Reflection.AssemblyConfigurationAttribute("Release")]
 [assembly: System.Reflection.AssemblyFileVersionAttribute("1.0.0.0")]
-[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+c00da727f908329657cf2c19e76640d808bbc0bb")]
+[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+2b1ace68f245f3aa7976fb0e8151e24004d85332")]
 [assembly: System.Reflection.AssemblyProductAttribute("SonarrFlowLauncherPlugin")]
 [assembly: System.Reflection.AssemblyTitleAttribute("SonarrFlowLauncherPlugin")]
 [assembly: System.Reflection.AssemblyVersionAttribute("1.0.0.0")]
