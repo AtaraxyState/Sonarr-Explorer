@@ -14,11 +14,11 @@ A Flow Launcher plugin to control Sonarr directly from your launcher. Quickly ch
 - **Activity Monitor** (`snr -a`): View current downloads and recent history
   - `snr -a q` or `snr -a queue`: Shows active downloads with progress
   - `snr -a h` or `snr -a history`: Shows recent activity history
-  - Shows download progress and quality information
+  - Shows download progress and quality information (update frequency limited by Sonarr)
   - Displays episode information (S##E##)
   - User-friendly timestamps (Today/Yesterday/Date)
 
-- **Library Search** (`snr -s`): Search your Sonarr library
+- **Library Search** (`snr -l`): Search your Sonarr library
   - Quick access to series information
   - View monitored status
   - Series statistics and details

@@ -49,12 +49,12 @@ namespace SonarrFlowLauncherPlugin.Tests
 
         private static void TestSearchCommand()
         {
-            Console.WriteLine("\nTesting Search Command");
-            Console.WriteLine("--------------------");
+            Console.WriteLine("\nTesting Library Search Command");
+            Console.WriteLine("------------------------------");
 
-            var command = new SearchCommand(sonarrService, settings);
-            TestQuery(command, "snr -s");
-            TestQuery(command, "snr -s your");
+            var command = new LibrarySearchCommand(sonarrService, settings);
+            TestQuery(command, "snr -l");
+            TestQuery(command, "snr -l your");
         }
 
         private static void TestQuery(BaseCommand command, string queryString)
