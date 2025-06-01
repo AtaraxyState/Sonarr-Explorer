@@ -94,16 +94,16 @@ namespace SonarrFlowLauncherPlugin.Services
                 .ToList();
         }
 
-        public async Task<bool> OpenSeriesInBrowser(int seriesId)
+        public async Task<bool> OpenSeriesInBrowser(string titleSlug)
         {
             try
             {
-                var url = $"{WebBaseUrl}/series/{seriesId}";
+                var url = $"{WebBaseUrl}/series/{titleSlug}";
                 return OpenUrlInBrowser(url);
             }
             catch (Exception ex)
             {
-                LogError($"Error opening series {seriesId} in browser", ex);
+                LogError($"Error opening series {titleSlug} in browser", ex);
                 return false;
             }
         }

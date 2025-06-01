@@ -73,7 +73,7 @@ namespace SonarrFlowLauncherPlugin.Commands
                         SubTitle = $"{show.Network} | {show.Status} | {stats.SeasonCount} Seasons | {episodeInfo}",
                         IcoPath = !string.IsNullOrEmpty(show.PosterPath) ? show.PosterPath : "Images\\icon.png",
                         Score = 100,
-                        Action = _ => SonarrService.OpenSeriesInBrowser(show.Id).Result
+                        Action = _ => SonarrService.OpenSeriesInBrowser(show.TitleSlug).Result
                     });
                 }
             }

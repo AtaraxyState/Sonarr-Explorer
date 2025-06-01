@@ -10,6 +10,9 @@ namespace SonarrFlowLauncherPlugin.Models
         [JsonProperty("title")]
         public string Title { get; set; }
 
+        [JsonProperty("titleSlug")]
+        public string TitleSlug { get; set; }
+
         [JsonProperty("overview")]
         public string Overview { get; set; }
 
