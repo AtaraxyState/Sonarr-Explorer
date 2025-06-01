@@ -1,8 +1,14 @@
+# Read version from plugin.json
+$pluginJsonPath = ".\SonarrFlowLauncherPlugin\plugin.json"
+$pluginJson = Get-Content $pluginJsonPath | ConvertFrom-Json
+$version = $pluginJson.Version
+
 # Plugin configuration
-$PluginDirectory = "$env:APPDATA\FlowLauncher\Plugins\SonarrFlowLauncherPlugin"
+$PluginDirectory = "$env:APPDATA\FlowLauncher\Plugins\Sonarr-Explorer-" + $version
 $FlowLauncherProcess = "Flow.Launcher"
 
 Write-Host "Starting deployment process..."
+Write-Host "Plugin version: $version"
 
 # Stop Flow Launcher if it's running
 Write-Host "Stopping Flow Launcher..."
