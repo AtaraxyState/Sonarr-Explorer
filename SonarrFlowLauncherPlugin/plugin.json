@@ -1,10 +1,10 @@
 {
     "ID": "D29D1AA0-3F6A-4F2E-8D0A-A5B7C9A5EFCF",
     "ActionKeyword": "snr",
-    "Name": "Sonarr Flow Launcher",
+    "Name": "Sonarr Explorer",
     "Description": "Control Sonarr from Flow Launcher. Features: View calendar, activity, and search library.",
     "Author": "Rain",
-    "Version": "1.0.1",
+    "Version": "1.0.5",
     "Language": "csharp",
     "Website": "https://github.com/AtaraxyState/Sonarr-Explorer",
     "ExecuteFileName": "SonarrFlowLauncherPlugin.dll",
