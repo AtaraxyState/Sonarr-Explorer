@@ -1,6 +1,0 @@
-D:\Documents\Git\FlowLauncher\Custom plugins\SonarrFlowLauncherPlugin\SonarrFlowLauncherPlugin.Tests\obj\Release\net7.0-windows\SonarrFlowLauncherPlugin.Tests.csproj.AssemblyReference.cache
-D:\Documents\Git\FlowLauncher\Custom plugins\SonarrFlowLauncherPlugin\SonarrFlowLauncherPlugin.Tests\obj\Release\net7.0-windows\SonarrFlowLauncherPlugin.Tests.GeneratedMSBuildEditorConfig.editorconfig
-D:\Documents\Git\FlowLauncher\Custom plugins\SonarrFlowLauncherPlugin\SonarrFlowLauncherPlugin.Tests\obj\Release\net7.0-windows\SonarrFlowLauncherPlugin.Tests.AssemblyInfoInputs.cache
-D:\Documents\Git\FlowLauncher\Custom plugins\SonarrFlowLauncherPlugin\SonarrFlowLauncherPlugin.Tests\obj\Release\net7.0-windows\SonarrFlowLauncherPlugin.Tests.AssemblyInfo.cs
-D:\Documents\Git\FlowLauncher\Custom plugins\SonarrFlowLauncherPlugin\SonarrFlowLauncherPlugin.Tests\obj\Release\net7.0-windows\SonarrFlowLauncherPlugin.Tests.csproj.CoreCompileInputs.cache
-D:\Documents\Git\FlowLauncher\Custom plugins\SonarrFlowLauncherPlugin\SonarrFlowLauncherPlugin.Tests\obj\Release\net7.0-windows\SonarrFlowLauncherPlugin.Tests.sourcelink.json
