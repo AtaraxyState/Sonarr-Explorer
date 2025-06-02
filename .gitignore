@@ -1,0 +1,46 @@
+# Build outputs
+bin/
+obj/
+*.dll
+*.exe
+*.pdb
+*.cache
+
+# Visual Studio / VS Code
+.vs/
+.vscode/
+*.user
+*.suo
+*.sln.docstates
+
+# Local configuration files containing sensitive data
+appsettings.local.json
+config.local.json
+plugin.local.yaml
+secrets.json
+
+# Environment files
+.env
+.env.local
+
+# Test results
+TestResults/
+*.trx
+
+# NuGet
+packages/
+*.nupkg
+
+# OS generated files
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db
+
+# Temporary files
+*.tmp
+*.temp
+*.log 

@@ -1,3 +1,7 @@
-ApiKey: "411208c5131742b7b5e5c42317f785f7"
+# Main plugin configuration
+# DO NOT PUT YOUR API KEY HERE! Use plugin.local.yaml instead
+# Copy plugin.local.yaml.example to plugin.local.yaml and add your API key there
+
+ApiKey: "" # Will be loaded from plugin.local.yaml or environment variable SONARR_API_KEY
 ServerUrl: "localhost:8989"
 UseHttps: false 
