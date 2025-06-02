@@ -58,6 +58,7 @@ namespace SonarrFlowLauncherPlugin.Tests
             TestCalendarCommand();
             TestActivityCommand();
             TestSearchCommand();
+            TestRefreshCommand();
         }
 
         private static void TestCalendarCommand()
@@ -92,6 +93,20 @@ namespace SonarrFlowLauncherPlugin.Tests
             var command = new LibrarySearchCommand(sonarrService, settings);
             TestQuery(command, "snr -l");
             TestQuery(command, "snr -l your");
+        }
+
+        private static void TestRefreshCommand()
+        {
+            Console.WriteLine("\nTesting Refresh Command");
+            Console.WriteLine("----------------------");
+
+            var command = new RefreshCommand(sonarrService, settings);
+            
+            // Test different refresh scenarios
+            TestQuery(command, "snr -r");
+            TestQuery(command, "snr -r all");
+            TestQuery(command, "snr -r your");
+            TestQuery(command, "snr -r test");
         }
 
         private static void TestQuery(BaseCommand command, string queryString)

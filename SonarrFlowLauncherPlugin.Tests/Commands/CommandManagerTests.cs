@@ -31,9 +31,11 @@ namespace SonarrFlowLauncherPlugin.Tests.Commands
             var results = _commandManager.HandleQuery(query);
 
             // Assert
-            Assert.AreEqual(2, results.Count); // Activity and Library Search commands
+            Assert.AreEqual(4, results.Count); // Activity, Library Search, Calendar, and Refresh commands
             Assert.IsTrue(results.Any(r => r.Title == "View Sonarr Activity"));
             Assert.IsTrue(results.Any(r => r.Title == "Search Sonarr Library"));
+            Assert.IsTrue(results.Any(r => r.Title == "View Sonarr Calendar"));
+            Assert.IsTrue(results.Any(r => r.Title == "Refresh Sonarr Series"));
         }
 
         [TestMethod]

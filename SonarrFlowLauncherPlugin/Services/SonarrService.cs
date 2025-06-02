@@ -437,6 +437,74 @@ namespace SonarrFlowLauncherPlugin.Services
 
         #endregion
 
+        #region Refresh Operations
+
+        public async Task<bool> RefreshAllSeriesAsync()
+        {
+            try
+            {
+                var commandUrl = $"{BaseUrl}/command";
+                var command = new { name = "RescanSeries" };
+                var json = JsonConvert.SerializeObject(command);
+
+                LogDebug($"Sending refresh all series command to: {commandUrl}");
+                LogDebug($"Command payload: {json}");
+
+                var content = new StringContent(json, System.Text.Encoding.UTF8, "application/json");
+                var response = await _httpClient.PostAsync(commandUrl, content);
+
+                if (response.IsSuccessStatusCode)
+                {
+                    LogDebug("Refresh all series command sent successfully");
+                    return true;
+                }
+                else
+                {
+                    LogError($"Failed to send refresh command. Status: {response.StatusCode}", new Exception(response.ReasonPhrase));
+                    return false;
+                }
+            }
+            catch (Exception ex)
+            {
+                LogError("Error refreshing all series", ex);
+                return false;
+            }
+        }
+
+        public async Task<bool> RefreshSeriesAsync(int seriesId)
+        {
+            try
+            {
+                var commandUrl = $"{BaseUrl}/command";
+                var command = new { name = "RescanSeries", seriesId = seriesId };
+                var json = JsonConvert.SerializeObject(command);
+
+                LogDebug($"Sending refresh series command to: {commandUrl}");
+                LogDebug($"Command payload: {json}");
+
+                var content = new StringContent(json, System.Text.Encoding.UTF8, "application/json");
+                var response = await _httpClient.PostAsync(commandUrl, content);
+
+                if (response.IsSuccessStatusCode)
+                {
+                    LogDebug($"Refresh series {seriesId} command sent successfully");
+                    return true;
+                }
+                else
+                {
+                    LogError($"Failed to send refresh command for series {seriesId}. Status: {response.StatusCode}", new Exception(response.ReasonPhrase));
+                    return false;
+                }
+            }
+            catch (Exception ex)
+            {
+                LogError($"Error refreshing series {seriesId}", ex);
+                return false;
+            }
+        }
+
+        #endregion
+
         #region Logging
 
         private void LogDebug(string message)
