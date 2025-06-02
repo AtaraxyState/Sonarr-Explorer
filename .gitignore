@@ -31,6 +31,10 @@ TestResults/
 packages/
 *.nupkg
 
+# Image cache directories
+ImageCache/
+*/ImageCache/
+
 # OS generated files
 .DS_Store
 .DS_Store?
