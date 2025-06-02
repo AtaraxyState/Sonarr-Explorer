@@ -48,7 +48,7 @@ jobs:
     - name: Create plugin package
       run: |
         $version = "${{ steps.version.outputs.VERSION }}"
-        $pluginDir = "SonarrFlowLauncher-$version"
+        $pluginDir = "Sonarr Explorer-$version"
         New-Item -ItemType Directory -Path $pluginDir -Force
         
         # Copy main plugin files from correct path
@@ -63,13 +63,10 @@ jobs:
         # Copy Images folder
         Copy-Item "SonarrFlowLauncherPlugin/Images" $pluginDir -Recurse -Force
         
-        # Create zip with version in name
-        Compress-Archive -Path $pluginDir -DestinationPath "SonarrFlowLauncher-$version.zip"
+        # Create zip with version in name - matches the desired naming format
+        Compress-Archive -Path $pluginDir -DestinationPath "Sonarr Explorer-$version.zip"
         
-        # Also create zip without version for latest download link
-        Compress-Archive -Path $pluginDir -DestinationPath "SonarrFlowLauncher.zip"
-        
-        Write-Host "Created packages: SonarrFlowLauncher-$version.zip and SonarrFlowLauncher.zip"
+        Write-Host "Created package: Sonarr Explorer-$version.zip"
       shell: pwsh
     
     - name: Create Release
@@ -80,8 +77,7 @@ jobs:
         draft: false
         prerelease: false
         files: |
-          SonarrFlowLauncher-${{ steps.version.outputs.VERSION }}.zip
-          SonarrFlowLauncher.zip
+          Sonarr Explorer-${{ steps.version.outputs.VERSION }}.zip
         body: |
           ## Sonarr Flow Launcher Plugin v${{ steps.version.outputs.VERSION }}
           
@@ -100,7 +96,7 @@ jobs:
           ### Installation
           Download and extract to your Flow Launcher plugins directory, or install via:
           ```
-          pm install https://github.com/AtaraxyState/Sonarr-Explorer/releases/latest/download/SonarrFlowLauncher.zip
+          pm install https://github.com/AtaraxyState/Sonarr-Explorer/releases/latest/download/Sonarr Explorer-${{ steps.version.outputs.VERSION }}.zip
           ```
           
           ### Requirements
