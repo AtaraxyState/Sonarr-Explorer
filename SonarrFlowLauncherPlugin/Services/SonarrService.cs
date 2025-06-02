@@ -13,7 +13,6 @@ namespace SonarrFlowLauncherPlugin.Services
         private bool _disposed;
 
         // Constants
-        private const int DefaultPageSize = 10;
         private const string PosterCoverType = "poster";
         private const string ImageCacheDirName = "ImageCache";
 
@@ -138,7 +137,7 @@ namespace SonarrFlowLauncherPlugin.Services
 
         private async Task<List<SonarrQueueItem>> FetchQueueItemsAsync()
         {
-            var queueUrl = $"{BaseUrl}/queue?pageSize={DefaultPageSize}&sortKey=timeleft&sortDir=asc&includeEpisode=true&includeSeries=true";
+            var queueUrl = $"{BaseUrl}/queue?sortKey=timeleft&sortDir=asc&includeEpisode=true&includeSeries=true";
             var response = await _httpClient.GetStringAsync(queueUrl);
             
             LogDebug("Queue API Response received");
@@ -187,7 +186,7 @@ namespace SonarrFlowLauncherPlugin.Services
 
         private async Task<List<SonarrHistoryItem>> FetchHistoryItemsAsync()
         {
-            var historyUrl = $"{BaseUrl}/history?page=1&pageSize={DefaultPageSize}&sortKey=date&sortDir=desc&includeSeries=true&includeEpisode=true";
+            var historyUrl = $"{BaseUrl}/history?sortKey=date&sortDir=desc&includeSeries=true&includeEpisode=true";
             var response = await _httpClient.GetStringAsync(historyUrl);
             var historyData = JsonConvert.DeserializeObject<dynamic>(response);
             var historyItems = new List<SonarrHistoryItem>();

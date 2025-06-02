@@ -12,7 +12,7 @@ namespace SonarrFlowLauncherPlugin.Commands
 
         public override string CommandFlag => "-l";
         public override string CommandName => "Search Sonarr Library";
-        public override string CommandDescription => "Search for shows in your Sonarr library";
+        public override string CommandDescription => "Search for shows in your Sonarr library, or show all series when no search term is provided";
 
         public override List<Result> Execute(Query query)
         {
@@ -26,32 +26,22 @@ namespace SonarrFlowLauncherPlugin.Commands
                 ? query.Search.Substring(CommandFlag.Length).Trim() 
                 : query.Search.Trim();
 
-            if (string.IsNullOrWhiteSpace(searchQuery))
-            {
-                return new List<Result>
-                {
-                    new Result
-                    {
-                        Title = "Enter Search Term",
-                        SubTitle = $"Type your search query after {CommandFlag}",
-                        IcoPath = "Images\\icon.png",
-                        Score = 100
-                    }
-                };
-            }
-
             try
             {
-                System.Diagnostics.Debug.WriteLine($"Searching for: {searchQuery}");
+                System.Diagnostics.Debug.WriteLine($"Searching for: '{searchQuery}'");
                 var series = SonarrService.SearchSeriesAsync(searchQuery).Result;
                 System.Diagnostics.Debug.WriteLine($"Found {series.Count} results");
 
                 if (series.Count == 0)
                 {
+                    var message = string.IsNullOrWhiteSpace(searchQuery) 
+                        ? "No series found in your library" 
+                        : $"No shows found matching '{searchQuery}'";
+                    
                     results.Add(new Result
                     {
                         Title = "No Results Found",
-                        SubTitle = $"No shows found matching '{searchQuery}'",
+                        SubTitle = message,
                         IcoPath = "Images\\icon.png",
                         Score = 100,
                         Action = _ => false
