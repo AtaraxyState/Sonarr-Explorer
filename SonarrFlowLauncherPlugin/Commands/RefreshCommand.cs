@@ -12,7 +12,7 @@ namespace SonarrFlowLauncherPlugin.Commands
 
         public override string CommandFlag => "-r";
         public override string CommandName => "Refresh Sonarr Series";
-        public override string CommandDescription => "Refresh all series or search for a specific series to refresh (use: -r [all|series name])";
+        public override string CommandDescription => "Refresh all series or search for a specific series to refresh (use: -r [all|c|n|y|{days}|now|series name])";
 
         public override List<Result> Execute(Query query)
         {
@@ -34,6 +34,29 @@ namespace SonarrFlowLauncherPlugin.Commands
 
             try
             {
+                // Handle specific calendar-based commands
+                switch (searchQuery)
+                {
+                    case "c":
+                    case "calendar":
+                        return HandleCalendarRefresh();
+                    
+                    case "n":
+                    case "now":
+                    case "overdue":
+                        return HandleOverdueRefresh();
+                    
+                    case "y":
+                    case "yesterday":
+                        return HandleYesterdayRefresh();
+                }
+
+                // Check if it's a number (days back)
+                if (int.TryParse(searchQuery, out int daysBack) && daysBack > 0)
+                {
+                    return HandlePriorDaysRefresh(daysBack);
+                }
+
                 // If no search query or "all", show refresh all option
                 if (string.IsNullOrWhiteSpace(searchQuery) || searchQuery == "all")
                 {
@@ -62,13 +85,95 @@ namespace SonarrFlowLauncherPlugin.Commands
                         }
                     });
 
+                    // Add calendar-based options
+                    results.Add(new Result
+                    {
+                        Title = "📅 Refresh Today's Calendar Series",
+                        SubTitle = "snr -r c - Refresh all series that have episodes in today's calendar",
+                        IcoPath = "Images\\icon.png",
+                        Score = 95,
+                        Action = _ =>
+                        {
+                            Task.Run(async () =>
+                            {
+                                try
+                                {
+                                    await SonarrService.RefreshTodaysCalendarSeriesAsync();
+                                    System.Diagnostics.Debug.WriteLine("Refresh today's calendar series command sent successfully");
+                                }
+                                catch (Exception ex)
+                                {
+                                    System.Diagnostics.Debug.WriteLine($"Failed to refresh today's calendar series: {ex.Message}");
+                                }
+                            });
+                            return true;
+                        }
+                    });
+
+                    results.Add(new Result
+                    {
+                        Title = "📅 Refresh Yesterday's Calendar Series",
+                        SubTitle = "snr -r y - Refresh all series that had episodes in yesterday's calendar",
+                        IcoPath = "Images\\icon.png",
+                        Score = 94,
+                        Action = _ =>
+                        {
+                            Task.Run(async () =>
+                            {
+                                try
+                                {
+                                    await SonarrService.RefreshYesterdayCalendarSeriesAsync();
+                                    System.Diagnostics.Debug.WriteLine("Refresh yesterday's calendar series command sent successfully");
+                                }
+                                catch (Exception ex)
+                                {
+                                    System.Diagnostics.Debug.WriteLine($"Failed to refresh yesterday's calendar series: {ex.Message}");
+                                }
+                            });
+                            return true;
+                        }
+                    });
+
+                    results.Add(new Result
+                    {
+                        Title = "⏰ Refresh Overdue Episodes",
+                        SubTitle = "snr -r n - Refresh series with episodes that have already aired today",
+                        IcoPath = "Images\\icon.png",
+                        Score = 93,
+                        Action = _ =>
+                        {
+                            Task.Run(async () =>
+                            {
+                                try
+                                {
+                                    await SonarrService.RefreshOverdueCalendarSeriesAsync();
+                                    System.Diagnostics.Debug.WriteLine("Refresh overdue episodes command sent successfully");
+                                }
+                                catch (Exception ex)
+                                {
+                                    System.Diagnostics.Debug.WriteLine($"Failed to refresh overdue episodes: {ex.Message}");
+                                }
+                            });
+                            return true;
+                        }
+                    });
+
+                    results.Add(new Result
+                    {
+                        Title = "🔢 Refresh Prior Days",
+                        SubTitle = "snr -r {number} - Refresh series from past N days (e.g., 'snr -r 3' for 3 days back)",
+                        IcoPath = "Images\\icon.png",
+                        Score = 92,
+                        Action = _ => false
+                    });
+
                     // If no search query, also show options
                     if (string.IsNullOrWhiteSpace(searchQuery))
                     {
                         results.Add(new Result
                         {
                             Title = "Refresh Options",
-                            SubTitle = "Use '-r all' to refresh all series, or '-r <series name>' to search and refresh specific series",
+                            SubTitle = "Use '-r all' (all series), '-r c' (today), '-r y' (yesterday), '-r n' (overdue), '-r {days}' (prior days), or '-r <series name>' (specific series)",
                             IcoPath = "Images\\icon.png",
                             Score = 90,
                             Action = _ => false
@@ -180,6 +285,126 @@ namespace SonarrFlowLauncherPlugin.Commands
             }
 
             return results;
+        }
+
+        private List<Result> HandleCalendarRefresh()
+        {
+            return new List<Result>
+            {
+                new Result
+                {
+                    Title = "📅 Refresh Today's Calendar Series",
+                    SubTitle = "Refreshing all series that have episodes in today's calendar...",
+                    IcoPath = "Images\\icon.png",
+                    Score = 100,
+                    Action = _ =>
+                    {
+                        Task.Run(async () =>
+                        {
+                            try
+                            {
+                                var result = await SonarrService.RefreshTodaysCalendarSeriesAsync();
+                                System.Diagnostics.Debug.WriteLine($"Calendar refresh result: {result.Message}");
+                            }
+                            catch (Exception ex)
+                            {
+                                System.Diagnostics.Debug.WriteLine($"Failed to refresh today's calendar series: {ex.Message}");
+                            }
+                        });
+                        return true;
+                    }
+                }
+            };
+        }
+
+        private List<Result> HandleOverdueRefresh()
+        {
+            return new List<Result>
+            {
+                new Result
+                {
+                    Title = "⏰ Refresh Overdue Episodes",
+                    SubTitle = "Refreshing series with episodes that have already aired today...",
+                    IcoPath = "Images\\icon.png",
+                    Score = 100,
+                    Action = _ =>
+                    {
+                        Task.Run(async () =>
+                        {
+                            try
+                            {
+                                var result = await SonarrService.RefreshOverdueCalendarSeriesAsync();
+                                System.Diagnostics.Debug.WriteLine($"Overdue refresh result: {result.Message}");
+                            }
+                            catch (Exception ex)
+                            {
+                                System.Diagnostics.Debug.WriteLine($"Failed to refresh overdue episodes: {ex.Message}");
+                            }
+                        });
+                        return true;
+                    }
+                }
+            };
+        }
+
+        private List<Result> HandleYesterdayRefresh()
+        {
+            return new List<Result>
+            {
+                new Result
+                {
+                    Title = "📅 Refresh Yesterday's Calendar Series",
+                    SubTitle = "Refreshing all series that had episodes in yesterday's calendar...",
+                    IcoPath = "Images\\icon.png",
+                    Score = 100,
+                    Action = _ =>
+                    {
+                        Task.Run(async () =>
+                        {
+                            try
+                            {
+                                var result = await SonarrService.RefreshYesterdayCalendarSeriesAsync();
+                                System.Diagnostics.Debug.WriteLine($"Yesterday refresh result: {result.Message}");
+                            }
+                            catch (Exception ex)
+                            {
+                                System.Diagnostics.Debug.WriteLine($"Failed to refresh yesterday's calendar series: {ex.Message}");
+                            }
+                        });
+                        return true;
+                    }
+                }
+            };
+        }
+
+        private List<Result> HandlePriorDaysRefresh(int daysBack)
+        {
+            return new List<Result>
+            {
+                new Result
+                {
+                    Title = $"🔢 Refresh Prior {daysBack} Day{(daysBack > 1 ? "s" : "")} Calendar Series",
+                    SubTitle = $"Refreshing all series that had episodes in the past {daysBack} day{(daysBack > 1 ? "s" : "")}...",
+                    IcoPath = "Images\\icon.png",
+                    Score = 100,
+                    Action = _ =>
+                    {
+                        Task.Run(async () =>
+                        {
+                            try
+                            {
+                                var result = await SonarrService.RefreshPriorDaysCalendarSeriesAsync(daysBack);
+                                System.Diagnostics.Debug.WriteLine($"Prior days refresh result: {result.Message}");
+                            }
+                            catch (Exception ex)
+                            {
+                                System.Diagnostics.Debug.WriteLine($"Failed to refresh prior {daysBack} days calendar series: {ex.Message}");
+                            }
+                        });
+                        return true;
+                    }
+                }
+            };
         }
     }
 } 

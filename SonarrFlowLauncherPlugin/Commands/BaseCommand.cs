@@ -20,6 +20,9 @@ namespace SonarrFlowLauncherPlugin.Commands
         
         public abstract List<Result> Execute(Query query);
 
+        // Public property to access SonarrService from CommandManager
+        public SonarrService GetSonarrService() => SonarrService;
+
         protected bool ValidateSettings()
         {
             if (string.IsNullOrEmpty(Settings.ApiKey))

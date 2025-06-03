@@ -35,8 +35,32 @@ namespace SonarrFlowLauncherPlugin
             // Create new command manager with updated services
             _commandManager = new CommandManager(_sonarrService, _settings);
             
-            // Create settings control
-            _settingsControl = new SettingsControl(_settings);
+            // Only create settings control if we don't have one yet
+            // (avoid recreating UI components on background threads)
+            if (_settingsControl == null)
+            {
+                _settingsControl = new SettingsControl(_settings);
+            }
+            
+            _lastSettingsCheck = DateTime.Now;
+        }
+
+        private void RefreshServicesOnly()
+        {
+            // Dispose existing service if it exists
+            _sonarrService?.Dispose();
+            
+            // Load fresh settings (don't assign to _settings yet, just get latest values)
+            var latestSettings = Settings.Load();
+            
+            // Create new service with updated settings
+            _sonarrService = new SonarrService(latestSettings);
+            
+            // Create new command manager with updated services
+            _commandManager = new CommandManager(_sonarrService, latestSettings);
+            
+            // Update the settings reference
+            _settings = latestSettings;
             
             _lastSettingsCheck = DateTime.Now;
         }
@@ -53,8 +77,9 @@ namespace SonarrFlowLauncherPlugin
                 var lastWrite = System.IO.File.GetLastWriteTime(settingsPath);
                 if (lastWrite > _lastSettingsCheck)
                 {
-                    // Settings have changed, reinitialize services
-                    InitializeServices();
+                    // Settings have changed, but we're likely on a background thread
+                    // Only refresh the services (no UI components)
+                    RefreshServicesOnly();
                 }
             }
         }
@@ -88,6 +113,11 @@ namespace SonarrFlowLauncherPlugin
 
         public Control CreateSettingPanel()
         {
+            // This method is called on the UI thread, so it's safe to create/recreate the settings control here
+            // Always create a fresh settings control with latest settings when the settings panel is opened
+            var latestSettings = Settings.Load();
+            _settingsControl = new SettingsControl(latestSettings);
+            _settings = latestSettings; // Update our reference too
             return _settingsControl;
         }
     }

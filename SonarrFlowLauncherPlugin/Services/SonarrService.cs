@@ -299,7 +299,7 @@ namespace SonarrFlowLauncherPlugin.Services
                 EpisodeTitle = item.title ?? string.Empty,
                 SeasonNumber = item.seasonNumber ?? 0,
                 EpisodeNumber = item.episodeNumber ?? 0,
-                AirDate = item.airDate ?? DateTime.MinValue,
+                AirDate = ParseAirDate(item.airDate),
                 HasFile = item.hasFile ?? false,
                 Monitored = item.monitored ?? false,
                 Overview = item.overview ?? string.Empty
@@ -312,8 +312,50 @@ namespace SonarrFlowLauncherPlugin.Services
                 calendarItem.PosterPath = await DownloadPosterAsync(calendarItem.SeriesId, posterUrl);
             }
 
-            LogDebug($"Processed calendar item: {calendarItem.Title} S{calendarItem.SeasonNumber:D2}E{calendarItem.EpisodeNumber:D2}");
+            LogDebug($"Processed calendar item: {calendarItem.Title} S{calendarItem.SeasonNumber:D2}E{calendarItem.EpisodeNumber:D2} - Air Date: {calendarItem.AirDate:yyyy-MM-dd HH:mm:ss} ({calendarItem.AirDate.Kind})");
             return calendarItem;
+        }
+
+        private DateTime ParseAirDate(dynamic airDateValue)
+        {
+            try
+            {
+                if (airDateValue == null)
+                {
+                    LogDebug("Air date is null, using DateTime.MinValue");
+                    return DateTime.MinValue;
+                }
+
+                // Convert the dynamic value to string first
+                string airDateString = airDateValue.ToString();
+                LogDebug($"Raw air date from API: {airDateString}");
+
+                // Try to parse the datetime string
+                if (DateTime.TryParse(airDateString, out DateTime parsedDate))
+                {
+                    LogDebug($"Parsed air date: {parsedDate:yyyy-MM-dd HH:mm:ss} (Kind: {parsedDate.Kind})");
+                    
+                    // Sonarr typically returns UTC times, so ensure they're marked as UTC
+                    if (parsedDate.Kind == DateTimeKind.Unspecified)
+                    {
+                        // Assume UTC if not specified (common for Sonarr API)
+                        parsedDate = DateTime.SpecifyKind(parsedDate, DateTimeKind.Utc);
+                        LogDebug($"Specified as UTC: {parsedDate:yyyy-MM-dd HH:mm:ss} ({parsedDate.Kind})");
+                    }
+                    
+                    return parsedDate;
+                }
+                else
+                {
+                    LogError($"Failed to parse air date string: {airDateString}", new Exception("DateTime parsing failed"));
+                    return DateTime.MinValue;
+                }
+            }
+            catch (Exception ex)
+            {
+                LogError($"Error parsing air date: {airDateValue}", ex);
+                return DateTime.MinValue;
+            }
         }
 
         public async Task<bool> OpenCalendarInBrowser()
@@ -500,6 +542,427 @@ namespace SonarrFlowLauncherPlugin.Services
             {
                 LogError($"Error refreshing series {seriesId}", ex);
                 return false;
+            }
+        }
+
+        public async Task<RefreshCalendarResult> RefreshTodaysCalendarSeriesAsync()
+        {
+            try
+            {
+                LogDebug("Starting refresh of today's calendar series");
+                
+                // Get today's calendar entries
+                var today = DateTime.Today;
+                var tomorrow = today.AddDays(1);
+                var todaysEpisodes = await GetCalendarAsync(today, tomorrow);
+
+                if (!todaysEpisodes.Any())
+                {
+                    LogDebug("No episodes found in today's calendar");
+                    return new RefreshCalendarResult 
+                    { 
+                        Success = true, 
+                        SeriesRefreshed = 0, 
+                        Message = "No episodes found in today's calendar" 
+                    };
+                }
+
+                // Get unique series IDs from today's episodes
+                var uniqueSeriesIds = todaysEpisodes.Select(e => e.SeriesId).Distinct().ToList();
+                LogDebug($"Found {uniqueSeriesIds.Count} unique series in today's calendar");
+
+                int successCount = 0;
+                var failedSeries = new List<string>();
+
+                // Refresh each series
+                foreach (var seriesId in uniqueSeriesIds)
+                {
+                    try
+                    {
+                        var success = await RefreshSeriesAsync(seriesId);
+                        if (success)
+                        {
+                            successCount++;
+                            var seriesTitle = todaysEpisodes.FirstOrDefault(e => e.SeriesId == seriesId)?.SeriesTitle ?? $"Series {seriesId}";
+                            LogDebug($"Successfully refreshed series: {seriesTitle}");
+                        }
+                        else
+                        {
+                            var seriesTitle = todaysEpisodes.FirstOrDefault(e => e.SeriesId == seriesId)?.SeriesTitle ?? $"Series {seriesId}";
+                            failedSeries.Add(seriesTitle);
+                            LogError($"Failed to refresh series: {seriesTitle}", new Exception("Refresh command failed"));
+                        }
+
+                        // Small delay between requests to avoid overwhelming the API
+                        await Task.Delay(100);
+                    }
+                    catch (Exception ex)
+                    {
+                        var seriesTitle = todaysEpisodes.FirstOrDefault(e => e.SeriesId == seriesId)?.SeriesTitle ?? $"Series {seriesId}";
+                        failedSeries.Add(seriesTitle);
+                        LogError($"Exception refreshing series: {seriesTitle}", ex);
+                    }
+                }
+
+                var message = $"Refreshed {successCount} of {uniqueSeriesIds.Count} series from today's calendar";
+                if (failedSeries.Any())
+                {
+                    message += $". Failed: {string.Join(", ", failedSeries)}";
+                }
+
+                LogDebug(message);
+                return new RefreshCalendarResult 
+                { 
+                    Success = true, 
+                    SeriesRefreshed = successCount, 
+                    TotalSeries = uniqueSeriesIds.Count,
+                    Message = message,
+                    FailedSeries = failedSeries
+                };
+            }
+            catch (Exception ex)
+            {
+                LogError("Error refreshing today's calendar series", ex);
+                return new RefreshCalendarResult 
+                { 
+                    Success = false, 
+                    SeriesRefreshed = 0, 
+                    Message = $"Error: {ex.Message}" 
+                };
+            }
+        }
+
+        public async Task<RefreshCalendarResult> RefreshOverdueCalendarSeriesAsync()
+        {
+            try
+            {
+                LogDebug("Starting refresh of overdue calendar series");
+                
+                // Get today's calendar entries
+                var today = DateTime.Today;
+                var tomorrow = today.AddDays(1);
+                var todaysEpisodes = await GetCalendarAsync(today, tomorrow);
+
+                if (!todaysEpisodes.Any())
+                {
+                    LogDebug("No episodes found in today's calendar");
+                    return new RefreshCalendarResult 
+                    { 
+                        Success = true, 
+                        SeriesRefreshed = 0, 
+                        Message = "No episodes found in today's calendar" 
+                    };
+                }
+
+                var now = DateTime.Now;
+                LogDebug($"Current local time: {now:yyyy-MM-dd HH:mm:ss}");
+                LogDebug($"Found {todaysEpisodes.Count} episodes in today's calendar");
+
+                // Filter episodes that have already aired (past their air date/time)
+                var overdueEpisodes = new List<SonarrCalendarItem>();
+                
+                foreach (var episode in todaysEpisodes)
+                {
+                    LogDebug($"Checking episode: {episode.SeriesTitle} S{episode.SeasonNumber:D2}E{episode.EpisodeNumber:D2} - Air Date: {episode.AirDate:yyyy-MM-dd HH:mm:ss} ({episode.AirDate.Kind})");
+                    
+                    // Handle timezone conversion if needed
+                    var episodeAirTime = episode.AirDate;
+                    
+                    // If the episode air date is in UTC, convert to local time for comparison
+                    if (episodeAirTime.Kind == DateTimeKind.Utc)
+                    {
+                        episodeAirTime = episodeAirTime.ToLocalTime();
+                        LogDebug($"  Converted UTC to local time: {episodeAirTime:yyyy-MM-dd HH:mm:ss}");
+                    }
+                    else if (episodeAirTime.Kind == DateTimeKind.Unspecified)
+                    {
+                        // If kind is unspecified, assume it's already in the correct timezone
+                        // but we might need to handle this based on Sonarr's settings
+                        LogDebug($"  Air time kind is unspecified, treating as local time");
+                    }
+
+                    // Add some buffer time (e.g., 10 minutes) to account for slight variations
+                    var bufferMinutes = 10;
+                    var cutoffTime = now.AddMinutes(-bufferMinutes);
+                    
+                    if (episodeAirTime <= cutoffTime)
+                    {
+                        var minutesLate = (now - episodeAirTime).TotalMinutes;
+                        LogDebug($"  Episode is overdue by {minutesLate:F1} minutes");
+                        overdueEpisodes.Add(episode);
+                    }
+                    else
+                    {
+                        var minutesUntilAir = (episodeAirTime - now).TotalMinutes;
+                        LogDebug($"  Episode airs in {minutesUntilAir:F1} minutes");
+                    }
+                }
+
+                if (!overdueEpisodes.Any())
+                {
+                    LogDebug("No overdue episodes found in today's calendar (checked with 10-minute buffer)");
+                    return new RefreshCalendarResult 
+                    { 
+                        Success = true, 
+                        SeriesRefreshed = 0, 
+                        Message = "No overdue episodes found in today's calendar" 
+                    };
+                }
+
+                // Get unique series IDs from overdue episodes
+                var uniqueSeriesIds = overdueEpisodes.Select(e => e.SeriesId).Distinct().ToList();
+                LogDebug($"Found {uniqueSeriesIds.Count} unique series with {overdueEpisodes.Count} overdue episodes");
+
+                // Log which episodes are considered overdue
+                foreach (var episode in overdueEpisodes)
+                {
+                    var minutesLate = (now - episode.AirDate).TotalMinutes;
+                    LogDebug($"Overdue: {episode.SeriesTitle} S{episode.SeasonNumber:D2}E{episode.EpisodeNumber:D2} - {minutesLate:F1} minutes late");
+                }
+
+                int successCount = 0;
+                var failedSeries = new List<string>();
+
+                // Refresh each series with overdue episodes
+                foreach (var seriesId in uniqueSeriesIds)
+                {
+                    try
+                    {
+                        var success = await RefreshSeriesAsync(seriesId);
+                        if (success)
+                        {
+                            successCount++;
+                            var seriesTitle = overdueEpisodes.FirstOrDefault(e => e.SeriesId == seriesId)?.SeriesTitle ?? $"Series {seriesId}";
+                            LogDebug($"Successfully refreshed overdue series: {seriesTitle}");
+                        }
+                        else
+                        {
+                            var seriesTitle = overdueEpisodes.FirstOrDefault(e => e.SeriesId == seriesId)?.SeriesTitle ?? $"Series {seriesId}";
+                            failedSeries.Add(seriesTitle);
+                            LogError($"Failed to refresh overdue series: {seriesTitle}", new Exception("Refresh command failed"));
+                        }
+
+                        // Small delay between requests to avoid overwhelming the API
+                        await Task.Delay(100);
+                    }
+                    catch (Exception ex)
+                    {
+                        var seriesTitle = overdueEpisodes.FirstOrDefault(e => e.SeriesId == seriesId)?.SeriesTitle ?? $"Series {seriesId}";
+                        failedSeries.Add(seriesTitle);
+                        LogError($"Exception refreshing overdue series: {seriesTitle}", ex);
+                    }
+                }
+
+                var message = $"Refreshed {successCount} of {uniqueSeriesIds.Count} series with {overdueEpisodes.Count} overdue episodes from today's calendar";
+                if (failedSeries.Any())
+                {
+                    message += $". Failed: {string.Join(", ", failedSeries)}";
+                }
+
+                LogDebug(message);
+                return new RefreshCalendarResult 
+                { 
+                    Success = true, 
+                    SeriesRefreshed = successCount, 
+                    TotalSeries = uniqueSeriesIds.Count,
+                    Message = message,
+                    FailedSeries = failedSeries
+                };
+            }
+            catch (Exception ex)
+            {
+                LogError("Error refreshing overdue calendar series", ex);
+                return new RefreshCalendarResult 
+                { 
+                    Success = false, 
+                    SeriesRefreshed = 0, 
+                    Message = $"Error: {ex.Message}" 
+                };
+            }
+        }
+
+        public async Task<RefreshCalendarResult> RefreshYesterdayCalendarSeriesAsync()
+        {
+            try
+            {
+                LogDebug("Starting refresh of yesterday's calendar series");
+                
+                // Get yesterday's calendar entries
+                var yesterday = DateTime.Today.AddDays(-1);
+                var today = DateTime.Today;
+                var yesterdaysEpisodes = await GetCalendarAsync(yesterday, today);
+
+                if (!yesterdaysEpisodes.Any())
+                {
+                    LogDebug("No episodes found in yesterday's calendar");
+                    return new RefreshCalendarResult 
+                    { 
+                        Success = true, 
+                        SeriesRefreshed = 0, 
+                        Message = "No episodes found in yesterday's calendar" 
+                    };
+                }
+
+                // Get unique series IDs from yesterday's episodes
+                var uniqueSeriesIds = yesterdaysEpisodes.Select(e => e.SeriesId).Distinct().ToList();
+                LogDebug($"Found {uniqueSeriesIds.Count} unique series in yesterday's calendar");
+
+                int successCount = 0;
+                var failedSeries = new List<string>();
+
+                // Refresh each series
+                foreach (var seriesId in uniqueSeriesIds)
+                {
+                    try
+                    {
+                        var success = await RefreshSeriesAsync(seriesId);
+                        if (success)
+                        {
+                            successCount++;
+                            var seriesTitle = yesterdaysEpisodes.FirstOrDefault(e => e.SeriesId == seriesId)?.SeriesTitle ?? $"Series {seriesId}";
+                            LogDebug($"Successfully refreshed series from yesterday: {seriesTitle}");
+                        }
+                        else
+                        {
+                            var seriesTitle = yesterdaysEpisodes.FirstOrDefault(e => e.SeriesId == seriesId)?.SeriesTitle ?? $"Series {seriesId}";
+                            failedSeries.Add(seriesTitle);
+                            LogError($"Failed to refresh series from yesterday: {seriesTitle}", new Exception("Refresh command failed"));
+                        }
+
+                        // Small delay between requests to avoid overwhelming the API
+                        await Task.Delay(100);
+                    }
+                    catch (Exception ex)
+                    {
+                        var seriesTitle = yesterdaysEpisodes.FirstOrDefault(e => e.SeriesId == seriesId)?.SeriesTitle ?? $"Series {seriesId}";
+                        failedSeries.Add(seriesTitle);
+                        LogError($"Exception refreshing series from yesterday: {seriesTitle}", ex);
+                    }
+                }
+
+                var message = $"Refreshed {successCount} of {uniqueSeriesIds.Count} series from yesterday's calendar";
+                if (failedSeries.Any())
+                {
+                    message += $". Failed: {string.Join(", ", failedSeries)}";
+                }
+
+                LogDebug(message);
+                return new RefreshCalendarResult 
+                { 
+                    Success = true, 
+                    SeriesRefreshed = successCount, 
+                    TotalSeries = uniqueSeriesIds.Count,
+                    Message = message,
+                    FailedSeries = failedSeries
+                };
+            }
+            catch (Exception ex)
+            {
+                LogError("Error refreshing yesterday's calendar series", ex);
+                return new RefreshCalendarResult 
+                { 
+                    Success = false, 
+                    SeriesRefreshed = 0, 
+                    Message = $"Error: {ex.Message}" 
+                };
+            }
+        }
+
+        public async Task<RefreshCalendarResult> RefreshPriorDaysCalendarSeriesAsync(int daysBack)
+        {
+            try
+            {
+                LogDebug($"Starting refresh of calendar series from {daysBack} days back");
+                
+                if (daysBack < 1)
+                {
+                    return new RefreshCalendarResult 
+                    { 
+                        Success = false, 
+                        SeriesRefreshed = 0, 
+                        Message = "Days back must be 1 or greater" 
+                    };
+                }
+
+                // Get calendar entries from specified days back
+                var startDate = DateTime.Today.AddDays(-daysBack);
+                var endDate = DateTime.Today;
+                var priorEpisodes = await GetCalendarAsync(startDate, endDate);
+
+                if (!priorEpisodes.Any())
+                {
+                    LogDebug($"No episodes found in calendar from {daysBack} days back");
+                    return new RefreshCalendarResult 
+                    { 
+                        Success = true, 
+                        SeriesRefreshed = 0, 
+                        Message = $"No episodes found in calendar from past {daysBack} day{(daysBack > 1 ? "s" : "")}" 
+                    };
+                }
+
+                // Get unique series IDs from prior episodes
+                var uniqueSeriesIds = priorEpisodes.Select(e => e.SeriesId).Distinct().ToList();
+                LogDebug($"Found {uniqueSeriesIds.Count} unique series in calendar from past {daysBack} days");
+
+                int successCount = 0;
+                var failedSeries = new List<string>();
+
+                // Refresh each series
+                foreach (var seriesId in uniqueSeriesIds)
+                {
+                    try
+                    {
+                        var success = await RefreshSeriesAsync(seriesId);
+                        if (success)
+                        {
+                            successCount++;
+                            var seriesTitle = priorEpisodes.FirstOrDefault(e => e.SeriesId == seriesId)?.SeriesTitle ?? $"Series {seriesId}";
+                            LogDebug($"Successfully refreshed series from prior days: {seriesTitle}");
+                        }
+                        else
+                        {
+                            var seriesTitle = priorEpisodes.FirstOrDefault(e => e.SeriesId == seriesId)?.SeriesTitle ?? $"Series {seriesId}";
+                            failedSeries.Add(seriesTitle);
+                            LogError($"Failed to refresh series from prior days: {seriesTitle}", new Exception("Refresh command failed"));
+                        }
+
+                        // Small delay between requests to avoid overwhelming the API
+                        await Task.Delay(100);
+                    }
+                    catch (Exception ex)
+                    {
+                        var seriesTitle = priorEpisodes.FirstOrDefault(e => e.SeriesId == seriesId)?.SeriesTitle ?? $"Series {seriesId}";
+                        failedSeries.Add(seriesTitle);
+                        LogError($"Exception refreshing series from prior days: {seriesTitle}", ex);
+                    }
+                }
+
+                var dayText = daysBack == 1 ? "day" : "days";
+                var message = $"Refreshed {successCount} of {uniqueSeriesIds.Count} series from past {daysBack} {dayText}";
+                if (failedSeries.Any())
+                {
+                    message += $". Failed: {string.Join(", ", failedSeries)}";
+                }
+
+                LogDebug(message);
+                return new RefreshCalendarResult 
+                { 
+                    Success = true, 
+                    SeriesRefreshed = successCount, 
+                    TotalSeries = uniqueSeriesIds.Count,
+                    Message = message,
+                    FailedSeries = failedSeries
+                };
+            }
+            catch (Exception ex)
+            {
+                LogError($"Error refreshing calendar series from {daysBack} days back", ex);
+                return new RefreshCalendarResult 
+                { 
+                    Success = false, 
+                    SeriesRefreshed = 0, 
+                    Message = $"Error: {ex.Message}" 
+                };
             }
         }
 
