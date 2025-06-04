@@ -120,6 +120,7 @@ namespace SonarrFlowLauncherPlugin.Commands
                                 SubTitle = $"S{episode.SeasonNumber:D2}E{episode.EpisodeNumber:D2} - {episode.EpisodeTitle} - {episode.AirDate:g}",
                                 IcoPath = !string.IsNullOrEmpty(episode.PosterPath) ? episode.PosterPath : "Images\\icon.png",
                                 Score = 100 - index,
+                                ContextData = episode,
                                 Action = _ =>
                                 {
                                     if (!string.IsNullOrEmpty(episode.Overview))

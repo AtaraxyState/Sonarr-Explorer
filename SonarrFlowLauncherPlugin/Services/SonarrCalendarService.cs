@@ -336,7 +336,11 @@ namespace SonarrFlowLauncherPlugin.Services
                 AirDate = ParseAirDate(item.airDate),
                 HasFile = item.hasFile ?? false,
                 Monitored = item.monitored ?? false,
-                Overview = item.overview ?? string.Empty
+                Overview = item.overview ?? string.Empty,
+                
+                // Add series information for context menu functionality
+                SeriesPath = item.series?.path ?? string.Empty,
+                TitleSlug = item.series?.titleSlug ?? string.Empty
             };
 
             // Download poster if available
