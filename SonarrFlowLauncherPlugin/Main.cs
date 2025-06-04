@@ -94,21 +94,9 @@ namespace SonarrFlowLauncherPlugin
             // Check for settings changes before processing query
             CheckForSettingsChanges();
             
-            if (string.IsNullOrEmpty(_settings.ApiKey))
-            {
-                return new List<Result>
-                {
-                    new Result
-                    {
-                        Title = "Sonarr API Key Not Set",
-                        SubTitle = "Please set your Sonarr API key in the plugin settings",
-                        IcoPath = "Images\\icon.png",
-                        Action = _ => false
-                    }
-                };
-            }
-
-            return _commandManager.HandleQuery(query);
+            bool hasApiKey = !string.IsNullOrEmpty(_settings.ApiKey);
+            
+            return _commandManager.HandleQuery(query, hasApiKey);
         }
 
         public Control CreateSettingPanel()
