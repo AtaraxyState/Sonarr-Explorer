@@ -11,9 +11,13 @@ namespace SonarrFlowLauncherPlugin.Commands
         private readonly List<BaseCommand> _commands;
         private readonly List<BaseCommand> _offlineCommands;
         private readonly LibrarySearchCommand _defaultCommand;
+        private readonly SetupCommand _setupCommand;
 
-        public CommandManager(SonarrService sonarrService, Settings settings)
+        public CommandManager(SonarrService sonarrService, Settings settings, PluginInitContext? context = null)
         {
+            // Setup command (works without API key)
+            _setupCommand = new SetupCommand(sonarrService, settings, context);
+
             // API-dependent commands
             _commands = new List<BaseCommand>
             {
@@ -26,6 +30,7 @@ namespace SonarrFlowLauncherPlugin.Commands
             // Offline/utility commands that work without API
             _offlineCommands = new List<BaseCommand>
             {
+                _setupCommand,
                 new HelpCommand(sonarrService, settings),
                 new AboutCommand(sonarrService, settings),
                 new UtilityCommand(sonarrService, settings),
@@ -178,22 +183,16 @@ namespace SonarrFlowLauncherPlugin.Commands
                 return offlineCommand.Execute(query);
             }
 
-            // If we have API key, check API-dependent commands
-            if (hasApiKey)
+            // Check API-dependent commands (let them handle their own validation)
+            var command = _commands.FirstOrDefault(c => query.Search.StartsWith(c.CommandFlag));
+            
+            if (command != null)
             {
-                var command = _commands.FirstOrDefault(c => query.Search.StartsWith(c.CommandFlag));
-                
-                if (command != null)
-                {
-                    return command.Execute(query);
-                }
-
-                // Default to library search if no command flag is provided
-                return _defaultCommand.Execute(query);
+                return command.Execute(query);
             }
 
-            // No API key and no offline command found - show help
-            return GetOfflineHelp();
+            // Default to library search if no command flag is provided (let it handle its own validation)
+            return _defaultCommand.Execute(query);
         }
 
         private List<Result> GetAvailableCommands(bool hasApiKey)

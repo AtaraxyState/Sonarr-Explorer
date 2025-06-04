@@ -32,8 +32,8 @@ namespace SonarrFlowLauncherPlugin
             // Create new service with updated settings
             _sonarrService = new SonarrService(_settings);
             
-            // Create new command manager with updated services
-            _commandManager = new CommandManager(_sonarrService, _settings);
+            // Create new command manager with updated services and context
+            _commandManager = new CommandManager(_sonarrService, _settings, _context);
             
             // Only create settings control if we don't have one yet
             // (avoid recreating UI components on background threads)
@@ -56,8 +56,8 @@ namespace SonarrFlowLauncherPlugin
             // Create new service with updated settings
             _sonarrService = new SonarrService(latestSettings);
             
-            // Create new command manager with updated services
-            _commandManager = new CommandManager(_sonarrService, latestSettings);
+            // Create new command manager with updated services and context
+            _commandManager = new CommandManager(_sonarrService, latestSettings, _context);
             
             // Update the settings reference
             _settings = latestSettings;
@@ -67,20 +67,28 @@ namespace SonarrFlowLauncherPlugin
 
         private void CheckForSettingsChanges()
         {
-            // Check if settings file has been modified since last check
-            var settingsPath = System.IO.Path.Combine(
-                System.IO.Path.GetDirectoryName(typeof(Settings).Assembly.Location), 
-                "plugin.yaml");
-                
-            if (System.IO.File.Exists(settingsPath))
+            try
             {
-                var lastWrite = System.IO.File.GetLastWriteTime(settingsPath);
-                if (lastWrite > _lastSettingsCheck)
+                // Check if settings file has been modified since last check
+                var settingsPath = System.IO.Path.Combine(
+                    System.IO.Path.GetDirectoryName(typeof(Settings).Assembly.Location) ?? "",
+                    "plugin.yaml");
+                    
+                if (System.IO.File.Exists(settingsPath))
                 {
-                    // Settings have changed, but we're likely on a background thread
-                    // Only refresh the services (no UI components)
-                    RefreshServicesOnly();
+                    var lastWrite = System.IO.File.GetLastWriteTime(settingsPath);
+                    if (lastWrite > _lastSettingsCheck)
+                    {
+                        // Settings have changed, but we're likely on a background thread
+                        // Only refresh the services (no UI components)
+                        RefreshServicesOnly();
+                    }
                 }
+            }
+            catch (Exception ex)
+            {
+                // Log the error but don't crash the plugin
+                System.Diagnostics.Debug.WriteLine($"Error checking settings changes: {ex.Message}");
             }
         }
 

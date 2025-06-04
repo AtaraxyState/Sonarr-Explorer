@@ -153,7 +153,7 @@ namespace SonarrFlowLauncherPlugin.Commands
                     SubTitle = "View full calendar in Sonarr",
                     IcoPath = "Images\\icon.png",
                     Score = 80,
-                    Action = _ => SonarrService.OpenCalendarInBrowser().Result
+                    Action = _ => SonarrService.OpenCalendarInBrowser()
                 });
             }
             catch (Exception ex)

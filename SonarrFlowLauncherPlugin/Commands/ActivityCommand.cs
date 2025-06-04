@@ -174,7 +174,7 @@ namespace SonarrFlowLauncherPlugin.Commands
                     SubTitle = "View full activity in Sonarr",
                     IcoPath = "Images\\icon.png",
                     Score = 80,
-                    Action = _ => SonarrService.OpenActivityInBrowser().Result
+                    Action = _ => SonarrService.OpenActivityInBrowser()
                 });
 
                 return results;

@@ -4,12 +4,15 @@ using YamlDotNet.Serialization;
 using System.IO;
 using System.Windows;
 using System.Windows.Media;
+using System.Threading.Tasks;
+using SonarrFlowLauncherPlugin.Services;
+using System;
 
 namespace SonarrFlowLauncherPlugin
 {
     public class Settings
     {
-        private static readonly string SettingsPath = Path.Combine(Path.GetDirectoryName(typeof(Settings).Assembly.Location), "plugin.yaml");
+        private static readonly string SettingsPath = Path.Combine(Path.GetDirectoryName(typeof(Settings).Assembly.Location) ?? Environment.CurrentDirectory, "plugin.yaml");
 
         public string ApiKey { get; set; } = string.Empty;
         public string ServerUrl { get; set; } = "localhost:8989";
@@ -55,6 +58,8 @@ namespace SonarrFlowLauncherPlugin
         private readonly TextBox _serverUrlBox;
         private readonly CheckBox _useHttpsBox;
         private readonly Label _statusLabel;
+        private readonly Button _testConnectionButton;
+        private SonarrService? _testService;
 
         public SettingsControl(Settings settings)
         {
@@ -116,6 +121,17 @@ namespace SonarrFlowLauncherPlugin
             };
             panel.Children.Add(_useHttpsBox);
 
+            // Test Connection Button
+            _testConnectionButton = new Button
+            {
+                Content = "Test Connection",
+                Margin = new System.Windows.Thickness(0, 0, 0, 10),
+                Padding = new System.Windows.Thickness(10, 5, 10, 5),
+                IsEnabled = false
+            };
+            _testConnectionButton.Click += async (s, e) => await TestConnectionAsync();
+            panel.Children.Add(_testConnectionButton);
+
             // Status Label
             _statusLabel = new Label
             {
@@ -135,6 +151,16 @@ namespace SonarrFlowLauncherPlugin
             };
             panel.Children.Add(exampleLabel);
 
+            // Instructions Label
+            var instructionsLabel = new Label
+            {
+                Content = "Find your API key in Sonarr → Settings → General → API Key",
+                FontStyle = FontStyles.Italic,
+                Foreground = Brushes.Gray,
+                Margin = new System.Windows.Thickness(0, 5, 0, 0)
+            };
+            panel.Children.Add(instructionsLabel);
+
             Content = panel;
 
             // Initial validation
@@ -147,6 +173,7 @@ namespace SonarrFlowLauncherPlugin
             {
                 _statusLabel.Content = "Please enter your Sonarr API key";
                 _statusLabel.Foreground = Brushes.Red;
+                _testConnectionButton.IsEnabled = false;
                 return;
             }
 
@@ -154,11 +181,51 @@ namespace SonarrFlowLauncherPlugin
             {
                 _statusLabel.Content = "Please enter your Sonarr server URL";
                 _statusLabel.Foreground = Brushes.Red;
+                _testConnectionButton.IsEnabled = false;
                 return;
             }
 
-            _statusLabel.Content = "Settings saved and validated";
-            _statusLabel.Foreground = Brushes.Green;
+            _statusLabel.Content = "Settings saved - Click 'Test Connection' to verify";
+            _statusLabel.Foreground = Brushes.Orange;
+            _testConnectionButton.IsEnabled = true;
+        }
+
+        private async Task TestConnectionAsync()
+        {
+            try
+            {
+                _testConnectionButton.IsEnabled = false;
+                _testConnectionButton.Content = "Testing...";
+                _statusLabel.Content = "Testing connection to Sonarr...";
+                _statusLabel.Foreground = Brushes.Blue;
+
+                // Dispose previous test service if it exists
+                _testService?.Dispose();
+
+                // Create a test service with current settings
+                _testService = new SonarrService(_settings);
+
+                // Test by trying to get a small amount of data from Sonarr
+                var series = await _testService.SearchSeriesAsync("");
+                
+                // If we get here, the connection worked
+                _statusLabel.Content = $"✅ Connection successful! Found {series.Count} series in library";
+                _statusLabel.Foreground = Brushes.Green;
+            }
+            catch (Exception ex)
+            {
+                _statusLabel.Content = $"❌ Connection failed: {ex.Message}";
+                _statusLabel.Foreground = Brushes.Red;
+            }
+            finally
+            {
+                _testConnectionButton.Content = "Test Connection";
+                _testConnectionButton.IsEnabled = true;
+                
+                // Clean up test service
+                _testService?.Dispose();
+                _testService = null;
+            }
         }
     }
 } 

@@ -38,12 +38,44 @@ namespace SonarrFlowLauncherPlugin.Commands
             {
                 new Result
                 {
-                    Title = "Sonarr API Key Not Set",
-                    SubTitle = "Please set your Sonarr API key in the plugin settings",
+                    Title = "🔧 Setup Required: Sonarr API Key Not Set",
+                    SubTitle = "Type 'snr -setup' to start guided setup wizard",
                     IcoPath = "Images\\icon.png",
+                    Score = 100,
+                    Action = _ => false
+                },
+                new Result
+                {
+                    Title = "⚙️ Alternative: Plugin Settings Panel",
+                    SubTitle = "Open Flow Launcher Settings → Plugins → Sonarr Explorer to configure manually",
+                    IcoPath = "Images\\icon.png",
+                    Score = 95,
+                    Action = _ => false
+                },
+                new Result
+                {
+                    Title = "❓ How to Find Your API Key",
+                    SubTitle = "In Sonarr: Settings → General → API Key (copy the long string)",
+                    IcoPath = "Images\\icon.png",
+                    Score = 90,
+                    Action = _ => false
+                },
+                new Result
+                {
+                    Title = "📖 Quick Start Guide",
+                    SubTitle = "1. Get API key from Sonarr → 2. Type 'snr -setup' → 3. Follow wizard",
+                    IcoPath = "Images\\icon.png",
+                    Score = 85,
                     Action = _ => false
                 }
             };
+        }
+
+        private bool OpenPluginSettings()
+        {
+            // Just return false since we can't reliably open Flow Launcher settings
+            // The user will need to open it manually
+            return false;
         }
     }
 } 
