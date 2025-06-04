@@ -1,6 +1,8 @@
 using Flow.Launcher.Plugin;
 using SonarrFlowLauncherPlugin.Services;
 using System.Diagnostics;
+using System.Threading.Tasks;
+using System.Linq;
 
 namespace SonarrFlowLauncherPlugin.Commands
 {
@@ -51,6 +53,8 @@ namespace SonarrFlowLauncherPlugin.Commands
 
                 foreach (var show in series)
                 {
+                    System.Diagnostics.Debug.WriteLine($"Series: {show.Title}, Path: '{show.Path}', Exists: {(!string.IsNullOrEmpty(show.Path) ? System.IO.Directory.Exists(show.Path).ToString() : "N/A")}");
+                    
                     var stats = show.Statistics ?? new Models.SeriesStatistics();
                     var episodeInfo = $"{stats.EpisodeFileCount}/{stats.TotalEpisodeCount} Episodes";
                     if (stats.TotalEpisodeCount == 0)
@@ -59,8 +63,9 @@ namespace SonarrFlowLauncherPlugin.Commands
                     }
 
                     var hasLocalPath = !string.IsNullOrEmpty(show.Path) && System.IO.Directory.Exists(show.Path);
+                    
                     var subTitle = hasLocalPath 
-                        ? $"{show.Network} | {show.Status} | {stats.SeasonCount} Seasons | {episodeInfo} | 📁 Right-click for options"
+                        ? $"{show.Network} | {show.Status} | {stats.SeasonCount} Seasons | {episodeInfo} | 📁 Right-click for files"
                         : $"{show.Network} | {show.Status} | {stats.SeasonCount} Seasons | {episodeInfo}";
 
                     results.Add(new Result
