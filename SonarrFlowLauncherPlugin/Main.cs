@@ -10,26 +10,88 @@ using System.Linq;
 
 namespace SonarrFlowLauncherPlugin
 {
+    /// <summary>
+    /// Main plugin class that serves as the entry point for the Sonarr Flow Launcher plugin.
+    /// Implements Flow Launcher interfaces for plugin functionality, settings management, and context menus.
+    /// Provides integration with Sonarr API for series management, episode tracking, and system controls.
+    /// </summary>
+    /// <remarks>
+    /// This plugin allows users to:
+    /// - Search and browse Sonarr series library
+    /// - View calendar events and upcoming episodes
+    /// - Monitor download activity and queue status
+    /// - Refresh series and trigger rescans
+    /// - Access series folders and episode files directly
+    /// - Manage Sonarr through various utility commands
+    /// </remarks>
     public class Main : IPlugin, ISettingProvider, IContextMenu
     {
+        /// <summary>
+        /// Flow Launcher plugin initialization context containing metadata and API access
+        /// </summary>
         private PluginInitContext _context;
+        
+        /// <summary>
+        /// Plugin settings instance containing Sonarr API configuration and user preferences
+        /// </summary>
         private Settings _settings;
+        
+        /// <summary>
+        /// Service for communicating with Sonarr API endpoints
+        /// </summary>
         private SonarrService _sonarrService;
+        
+        /// <summary>
+        /// WPF user control for plugin settings management interface
+        /// </summary>
         private SettingsControl _settingsControl;
+        
+        /// <summary>
+        /// Manager for handling different plugin commands and routing queries
+        /// </summary>
         private CommandManager _commandManager;
+        
+        /// <summary>
+        /// Service for building context menus for series and episode items
+        /// </summary>
         private Services.ContextMenuService _contextMenuService;
+        
+        /// <summary>
+        /// Timestamp of last settings file modification check for hot-reloading
+        /// </summary>
         private DateTime _lastSettingsCheck = DateTime.MinValue;
         
-        // Connection status tracking
-        private bool? _connectionStatus = null; // null = not tested, true = ok, false = failed
+        /// <summary>
+        /// Current Sonarr API connection status. null = not tested, true = connected, false = failed
+        /// </summary>
+        private bool? _connectionStatus = null;
+        
+        /// <summary>
+        /// Last connection error message if connection failed
+        /// </summary>
         private string _connectionError = string.Empty;
+        
+        /// <summary>
+        /// Timestamp of last connection test to prevent excessive API calls
+        /// </summary>
         private DateTime _lastConnectionTest = DateTime.MinValue;
 
+        /// <summary>
+        /// Initializes a new instance of the Main plugin class and sets up all required services
+        /// </summary>
         public Main()
         {
             InitializeServices();
         }
 
+        /// <summary>
+        /// Initializes or re-initializes all plugin services with current settings.
+        /// Creates fresh instances of SonarrService, ContextMenuService, and CommandManager.
+        /// </summary>
+        /// <remarks>
+        /// This method is called during plugin startup and when settings are changed.
+        /// It properly disposes of existing services before creating new ones.
+        /// </remarks>
         private void InitializeServices()
         {
             // Dispose existing service if it exists
@@ -57,6 +119,14 @@ namespace SonarrFlowLauncherPlugin
             _lastSettingsCheck = DateTime.Now;
         }
 
+        /// <summary>
+        /// Refreshes only the service layer components without touching UI elements.
+        /// Safe to call from background threads when settings have changed.
+        /// </summary>
+        /// <remarks>
+        /// This method is used for hot-reloading settings changes without recreating UI components.
+        /// It resets connection status and automatically tests the new connection.
+        /// </remarks>
         private void RefreshServicesOnly()
         {
             // Dispose existing service if it exists
@@ -91,6 +161,14 @@ namespace SonarrFlowLauncherPlugin
             _lastSettingsCheck = DateTime.Now;
         }
 
+        /// <summary>
+        /// Monitors the plugin settings file for changes and automatically reloads services if modified.
+        /// Implements hot-reloading functionality for seamless settings updates.
+        /// </summary>
+        /// <remarks>
+        /// This method is called before each query to ensure the plugin uses the latest settings.
+        /// It safely handles file system errors and background thread execution.
+        /// </remarks>
         private void CheckForSettingsChanges()
         {
             try
@@ -118,6 +196,11 @@ namespace SonarrFlowLauncherPlugin
             }
         }
 
+        /// <summary>
+        /// Initializes the plugin with Flow Launcher context and performs initial connection testing.
+        /// Called by Flow Launcher when the plugin is first loaded.
+        /// </summary>
+        /// <param name="context">Flow Launcher plugin initialization context containing metadata and APIs</param>
         public void Init(PluginInitContext context)
         {
             _context = context;
@@ -136,6 +219,19 @@ namespace SonarrFlowLauncherPlugin
             }
         }
 
+        /// <summary>
+        /// Processes user queries and returns relevant results based on input commands.
+        /// Main entry point for all plugin functionality including search, commands, and status display.
+        /// </summary>
+        /// <param name="query">User query containing search terms and command flags</param>
+        /// <returns>List of results to display in Flow Launcher including actions and context data</returns>
+        /// <remarks>
+        /// This method:
+        /// - Checks for settings changes before processing
+        /// - Shows connection status warnings when API is unreachable
+        /// - Routes queries to appropriate command handlers
+        /// - Provides fallback results for connection issues
+        /// </remarks>
         public List<Result> Query(Query query)
         {
             // Check for settings changes before processing query
@@ -179,6 +275,15 @@ namespace SonarrFlowLauncherPlugin
             return _commandManager.HandleQuery(query, hasApiKey);
         }
 
+        /// <summary>
+        /// Creates and returns the WPF settings panel for plugin configuration.
+        /// Called by Flow Launcher when user accesses plugin settings.
+        /// </summary>
+        /// <returns>WPF UserControl containing settings interface</returns>
+        /// <remarks>
+        /// Always creates a fresh settings control with the latest settings to ensure UI consistency.
+        /// This method is called on the UI thread so it's safe to create WPF controls.
+        /// </remarks>
         public Control CreateSettingPanel()
         {
             // This method is called on the UI thread, so it's safe to create/recreate the settings control here
@@ -189,6 +294,18 @@ namespace SonarrFlowLauncherPlugin
             return _settingsControl;
         }
 
+        /// <summary>
+        /// Builds context menu options for selected results based on their type and available data.
+        /// Provides file access, refresh options, and series-specific actions.
+        /// </summary>
+        /// <param name="selectedResult">The result item that was right-clicked to show context menu</param>
+        /// <returns>List of context menu options with actions for the selected item</returns>
+        /// <remarks>
+        /// Supports context menus for:
+        /// - Series results: folder access, episode files, refresh options
+        /// - Episode results: specific episode files, series actions, episode details
+        /// - Uses ContextData property to determine result type and available actions
+        /// </remarks>
         public List<Result> LoadContextMenus(Result selectedResult)
         {
             // Check if this is a series result from library search
@@ -205,6 +322,17 @@ namespace SonarrFlowLauncherPlugin
             return new List<Result>();
         }
 
+        /// <summary>
+        /// Performs asynchronous connection testing to Sonarr API with rate limiting.
+        /// Tests connectivity by attempting to retrieve series list and updates connection status.
+        /// </summary>
+        /// <remarks>
+        /// This method:
+        /// - Implements rate limiting (max once per minute) to prevent API spam
+        /// - Runs on background thread to avoid blocking UI
+        /// - Updates connection status and error message fields
+        /// - Provides detailed logging for troubleshooting
+        /// </remarks>
         private void TestConnectionAsync()
         {
             // Don't test too frequently (max once per minute)
