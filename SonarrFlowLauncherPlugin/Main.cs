@@ -6,6 +6,7 @@ using SonarrFlowLauncherPlugin.Commands;
 using SonarrFlowLauncherPlugin.Services;
 using SonarrFlowLauncherPlugin.Models;
 using System.Diagnostics;
+using System.Linq;
 
 namespace SonarrFlowLauncherPlugin
 {
@@ -16,7 +17,13 @@ namespace SonarrFlowLauncherPlugin
         private SonarrService _sonarrService;
         private SettingsControl _settingsControl;
         private CommandManager _commandManager;
+        private Services.ContextMenuService _contextMenuService;
         private DateTime _lastSettingsCheck = DateTime.MinValue;
+        
+        // Connection status tracking
+        private bool? _connectionStatus = null; // null = not tested, true = ok, false = failed
+        private string _connectionError = string.Empty;
+        private DateTime _lastConnectionTest = DateTime.MinValue;
 
         public Main()
         {
@@ -33,6 +40,9 @@ namespace SonarrFlowLauncherPlugin
             
             // Create new service with updated settings
             _sonarrService = new SonarrService(_settings);
+            
+            // Create context menu service
+            _contextMenuService = new Services.ContextMenuService(_sonarrService);
             
             // Create new command manager with updated services and context
             _commandManager = new CommandManager(_sonarrService, _settings, _context);
@@ -58,11 +68,25 @@ namespace SonarrFlowLauncherPlugin
             // Create new service with updated settings
             _sonarrService = new SonarrService(latestSettings);
             
+            // Create context menu service
+            _contextMenuService = new Services.ContextMenuService(_sonarrService);
+            
             // Create new command manager with updated services and context
             _commandManager = new CommandManager(_sonarrService, latestSettings, _context);
             
             // Update the settings reference
             _settings = latestSettings;
+            
+            // Reset connection status and test with new settings
+            _connectionStatus = null;
+            _connectionError = string.Empty;
+            _lastConnectionTest = DateTime.MinValue;
+            
+            if (!string.IsNullOrEmpty(_settings.ApiKey))
+            {
+                System.Diagnostics.Debug.WriteLine("Settings changed - testing new connection...");
+                TestConnectionAsync();
+            }
             
             _lastSettingsCheck = DateTime.Now;
         }
@@ -97,6 +121,19 @@ namespace SonarrFlowLauncherPlugin
         public void Init(PluginInitContext context)
         {
             _context = context;
+            
+            // Perform automatic connection test if API key is configured
+            if (!string.IsNullOrEmpty(_settings.ApiKey))
+            {
+                System.Diagnostics.Debug.WriteLine("Plugin initialized - starting automatic connection test...");
+                TestConnectionAsync();
+            }
+            else
+            {
+                System.Diagnostics.Debug.WriteLine("Plugin initialized - no API key configured, skipping connection test");
+                _connectionStatus = false;
+                _connectionError = "API key not configured";
+            }
         }
 
         public List<Result> Query(Query query)
@@ -105,6 +142,39 @@ namespace SonarrFlowLauncherPlugin
             CheckForSettingsChanges();
             
             bool hasApiKey = !string.IsNullOrEmpty(_settings.ApiKey);
+            
+            // Show connection status if there are issues and this is not a specific command
+            if (hasApiKey && !string.IsNullOrEmpty(query.Search) && _connectionStatus == false && 
+                !query.Search.StartsWith("-"))
+            {
+                var connectionResults = new List<Result>
+                {
+                    new Result
+                    {
+                        Title = "⚠️ Sonarr Connection Issue",
+                        SubTitle = $"Error: {_connectionError} | Click to test connection",
+                        IcoPath = "Images\\icon.png",
+                        Score = 1000,
+                        Action = _ => {
+                            TestConnectionAsync();
+                            return true;
+                        }
+                    },
+                    new Result
+                    {
+                        Title = "🔧 Open Plugin Settings",
+                        SubTitle = "Configure Sonarr API settings",
+                        IcoPath = "Images\\icon.png",
+                        Score = 999,
+                        Action = _ => false
+                    }
+                };
+                
+                // Add regular results below connection status
+                var regularResults = _commandManager.HandleQuery(query, hasApiKey);
+                connectionResults.AddRange(regularResults);
+                return connectionResults;
+            }
             
             return _commandManager.HandleQuery(query, hasApiKey);
         }
@@ -121,278 +191,52 @@ namespace SonarrFlowLauncherPlugin
 
         public List<Result> LoadContextMenus(Result selectedResult)
         {
-            var contextMenus = new List<Result>();
-
             // Check if this is a series result from library search
             if (selectedResult.ContextData is SonarrSeries series)
             {
-                // Add option to open local folder if path exists - this should be the primary option
-                if (!string.IsNullOrEmpty(series.Path) && System.IO.Directory.Exists(series.Path))
-                {
-                    contextMenus.Add(new Result
-                    {
-                        Title = "📁 Open Series Folder",
-                        SubTitle = $"Open {series.Path} in Windows Explorer",
-                        IcoPath = "Images\\icon.png",
-                        Score = 100,
-                        Action = _ => OpenFolderInExplorer(series.Path)
-                    });
-                }
-
-                // Add option to open in Sonarr web UI
-                contextMenus.Add(new Result
-                {
-                    Title = "🌐 Open in Sonarr",
-                    SubTitle = "Open series page in Sonarr web interface",
-                    IcoPath = "Images\\icon.png",
-                    Score = 95,
-                    Action = _ => _sonarrService.OpenSeriesInBrowser(series.TitleSlug)
-                });
-
-                // Add option to refresh series
-                contextMenus.Add(new Result
-                {
-                    Title = "🔄 Refresh Series",
-                    SubTitle = "Trigger a rescan of this series",
-                    IcoPath = "Images\\icon.png",
-                    Score = 90,
-                    Action = _ => RefreshSeries(series)
-                });
-
-                // Add copy path option if path exists
-                if (!string.IsNullOrEmpty(series.Path))
-                {
-                    contextMenus.Add(new Result
-                    {
-                        Title = "📋 Copy Path",
-                        SubTitle = $"Copy path to clipboard: {series.Path}",
-                        IcoPath = "Images\\icon.png",
-                        Score = 85,
-                        Action = _ => CopyToClipboard(series.Path)
-                    });
-                }
+                return _contextMenuService.BuildSeriesContextMenu(series);
             }
-            // Check if this is an activity item (queue or history)
+            // Check if this is an episode item (calendar/activity)
             else if (selectedResult.ContextData is SonarrEpisodeBase episodeItem)
             {
-                var seriesTitle = !string.IsNullOrEmpty(episodeItem.SeriesTitle) ? episodeItem.SeriesTitle : episodeItem.Title;
-                
-                // Add option to open episode file with default application
-                if (!string.IsNullOrEmpty(episodeItem.EpisodeFilePath) && System.IO.File.Exists(episodeItem.EpisodeFilePath))
-                {
-                    contextMenus.Add(new Result
-                    {
-                        Title = "▶️ Open Episode File",
-                        SubTitle = $"Open {System.IO.Path.GetFileName(episodeItem.EpisodeFilePath)} with default application",
-                        IcoPath = "Images\\icon.png",
-                        Score = 105,
-                        Action = _ => OpenFileWithDefaultApp(episodeItem.EpisodeFilePath)
-                    });
-                }
-                
-                // Add option to open local folder if path exists
-                if (!string.IsNullOrEmpty(episodeItem.SeriesPath) && System.IO.Directory.Exists(episodeItem.SeriesPath))
-                {
-                    contextMenus.Add(new Result
-                    {
-                        Title = "📁 Open Series Folder",
-                        SubTitle = $"Open {episodeItem.SeriesPath} in Windows Explorer",
-                        IcoPath = "Images\\icon.png",
-                        Score = 100,
-                        Action = _ => OpenFolderInExplorer(episodeItem.SeriesPath)
-                    });
-                }
-
-                // Add option to open series in Sonarr web UI
-                if (!string.IsNullOrEmpty(episodeItem.TitleSlug))
-                {
-                    contextMenus.Add(new Result
-                    {
-                        Title = "🌐 Open Series in Sonarr",
-                        SubTitle = "Open series page in Sonarr web interface",
-                        IcoPath = "Images\\icon.png",
-                        Score = 95,
-                        Action = _ => _sonarrService.OpenSeriesInBrowser(episodeItem.TitleSlug)
-                    });
-                }
-
-                // Add option to refresh series
-                if (episodeItem.SeriesId > 0)
-                {
-                    contextMenus.Add(new Result
-                    {
-                        Title = "🔄 Refresh Series",
-                        SubTitle = $"Trigger a rescan of {seriesTitle}",
-                        IcoPath = "Images\\icon.png",
-                        Score = 90,
-                        Action = _ => RefreshSeriesByEpisode(episodeItem)
-                    });
-                }
-
-                // Add copy episode file path option if file path exists
-                if (!string.IsNullOrEmpty(episodeItem.EpisodeFilePath))
-                {
-                    contextMenus.Add(new Result
-                    {
-                        Title = "📋 Copy Episode File Path",
-                        SubTitle = $"Copy episode file path to clipboard: {episodeItem.EpisodeFilePath}",
-                        IcoPath = "Images\\icon.png",
-                        Score = 87,
-                        Action = _ => CopyToClipboard(episodeItem.EpisodeFilePath)
-                    });
-                }
-
-                // Add copy series path option if path exists
-                if (!string.IsNullOrEmpty(episodeItem.SeriesPath))
-                {
-                    contextMenus.Add(new Result
-                    {
-                        Title = "📋 Copy Series Path",
-                        SubTitle = $"Copy series path to clipboard: {episodeItem.SeriesPath}",
-                        IcoPath = "Images\\icon.png",
-                        Score = 85,
-                        Action = _ => CopyToClipboard(episodeItem.SeriesPath)
-                    });
-                }
-
-                // Add episode-specific options for activity items
-                if (episodeItem is SonarrQueueItem queueItem)
-                {
-                    contextMenus.Add(new Result
-                    {
-                        Title = "📊 Download Progress",
-                        SubTitle = $"Progress: {queueItem.Progress:F1}% - Status: {queueItem.Status}",
-                        IcoPath = "Images\\icon.png",
-                        Score = 80,
-                        Action = _ => false // Just informational
-                    });
-                }
-                else if (episodeItem is SonarrHistoryItem historyItem)
-                {
-                    contextMenus.Add(new Result
-                    {
-                        Title = "📅 Event Details",
-                        SubTitle = $"Event: {historyItem.EventType} - Date: {historyItem.Date:g}",
-                        IcoPath = "Images\\icon.png",
-                        Score = 80,
-                        Action = _ => false // Just informational
-                    });
-                }
+                return _contextMenuService.BuildEpisodeContextMenu(episodeItem);
             }
 
-            return contextMenus;
+            return new List<Result>();
         }
 
-        private bool OpenFolderInExplorer(string path)
+        private void TestConnectionAsync()
         {
-            try
+            // Don't test too frequently (max once per minute)
+            if (DateTime.Now - _lastConnectionTest < TimeSpan.FromMinutes(1))
             {
-                if (System.IO.Directory.Exists(path))
+                System.Diagnostics.Debug.WriteLine("Skipping connection test - tested recently");
+                return;
+            }
+            
+            _lastConnectionTest = DateTime.Now;
+            
+            // Run connection test in background
+            System.Threading.Tasks.Task.Run(async () =>
+            {
+                try
                 {
-                    Process.Start(new ProcessStartInfo
-                    {
-                        FileName = "explorer.exe",
-                        Arguments = $"\"{path}\"",
-                        UseShellExecute = true
-                    });
-                    return true;
+                    System.Diagnostics.Debug.WriteLine("Testing connection to Sonarr...");
+                    
+                    // Try to get series list to test connection
+                    var series = await _sonarrService.SearchSeriesAsync("");
+                    
+                    _connectionStatus = true;
+                    _connectionError = string.Empty;
+                    System.Diagnostics.Debug.WriteLine($"Connection test successful - found {series.Count} series");
                 }
-            }
-            catch (Exception ex)
-            {
-                System.Diagnostics.Debug.WriteLine($"Error opening folder: {ex.Message}");
-            }
-            return false;
-        }
-
-        private bool RefreshSeries(SonarrSeries series)
-        {
-            try
-            {
-                // Run refresh in background to avoid blocking UI
-                System.Threading.Tasks.Task.Run(async () =>
+                catch (Exception ex)
                 {
-                    try
-                    {
-                        await _sonarrService.RefreshSeriesAsync(series.Id);
-                        System.Diagnostics.Debug.WriteLine($"Successfully refreshed series: {series.Title}");
-                    }
-                    catch (Exception ex)
-                    {
-                        System.Diagnostics.Debug.WriteLine($"Failed to refresh series {series.Title}: {ex.Message}");
-                    }
-                });
-                return true;
-            }
-            catch (Exception ex)
-            {
-                System.Diagnostics.Debug.WriteLine($"Error starting refresh for series {series.Title}: {ex.Message}");
-                return false;
-            }
-        }
-
-        private bool RefreshSeriesByEpisode(SonarrEpisodeBase episodeItem)
-        {
-            try
-            {
-                // Run refresh in background to avoid blocking UI
-                System.Threading.Tasks.Task.Run(async () =>
-                {
-                    try
-                    {
-                        await _sonarrService.RefreshSeriesAsync(episodeItem.SeriesId);
-                        var seriesTitle = !string.IsNullOrEmpty(episodeItem.SeriesTitle) ? episodeItem.SeriesTitle : episodeItem.Title;
-                        System.Diagnostics.Debug.WriteLine($"Successfully refreshed series: {seriesTitle}");
-                    }
-                    catch (Exception ex)
-                    {
-                        var seriesTitle = !string.IsNullOrEmpty(episodeItem.SeriesTitle) ? episodeItem.SeriesTitle : episodeItem.Title;
-                        System.Diagnostics.Debug.WriteLine($"Failed to refresh series {seriesTitle}: {ex.Message}");
-                    }
-                });
-                return true;
-            }
-            catch (Exception ex)
-            {
-                var seriesTitle = !string.IsNullOrEmpty(episodeItem.SeriesTitle) ? episodeItem.SeriesTitle : episodeItem.Title;
-                System.Diagnostics.Debug.WriteLine($"Error starting refresh for series {seriesTitle}: {ex.Message}");
-                return false;
-            }
-        }
-
-        private bool CopyToClipboard(string text)
-        {
-            try
-            {
-                System.Windows.Clipboard.SetText(text);
-                return true;
-            }
-            catch (Exception ex)
-            {
-                System.Diagnostics.Debug.WriteLine($"Error copying to clipboard: {ex.Message}");
-                return false;
-            }
-        }
-
-        private bool OpenFileWithDefaultApp(string filePath)
-        {
-            try
-            {
-                if (System.IO.File.Exists(filePath))
-                {
-                    Process.Start(new ProcessStartInfo
-                    {
-                        FileName = filePath,
-                        UseShellExecute = true
-                    });
-                    return true;
+                    _connectionStatus = false;
+                    _connectionError = ex.InnerException?.Message ?? ex.Message;
+                    System.Diagnostics.Debug.WriteLine($"Connection test failed: {_connectionError}");
                 }
-            }
-            catch (Exception ex)
-            {
-                System.Diagnostics.Debug.WriteLine($"Error opening file: {ex.Message}");
-            }
-            return false;
+            });
         }
     }
 } 

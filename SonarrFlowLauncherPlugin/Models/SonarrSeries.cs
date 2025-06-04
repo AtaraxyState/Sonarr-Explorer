@@ -34,6 +34,57 @@ namespace SonarrFlowLauncherPlugin.Models
         public string PosterPath { get; set; }
     }
 
+    public class SonarrEpisode
+    {
+        public int Id { get; set; }
+        public int SeriesId { get; set; }
+        public int SeasonNumber { get; set; }
+        public int EpisodeNumber { get; set; }
+        public string Title { get; set; } = string.Empty;
+        public DateTime? AirDate { get; set; }
+        public bool Monitored { get; set; }
+        public bool HasFile { get; set; }
+        public string Overview { get; set; } = string.Empty;
+        
+        // File information
+        public int EpisodeFileId { get; set; }
+        public string Quality { get; set; } = string.Empty;
+        public string Resolution { get; set; } = string.Empty;
+        public List<string> Languages { get; set; } = new();
+        public string RelativePath { get; set; } = string.Empty;
+        public long Size { get; set; }
+        
+        // Computed properties
+        public string SeriesPath { get; set; } = string.Empty;
+        public string SeriesTitle { get; set; } = string.Empty;
+        public string FullPath => !string.IsNullOrEmpty(SeriesPath) && !string.IsNullOrEmpty(RelativePath) 
+            ? System.IO.Path.Combine(SeriesPath, RelativePath) 
+            : string.Empty;
+        public string DirectoryPath => !string.IsNullOrEmpty(FullPath) 
+            ? System.IO.Path.GetDirectoryName(FullPath) ?? string.Empty 
+            : string.Empty;
+        
+        // Status indicators
+        public string StatusIcon => GetStatusIcon();
+        public string StatusText => GetStatusText();
+        
+        private string GetStatusIcon()
+        {
+            if (!Monitored) return "👁️‍🗨️"; // Not monitored
+            if (HasFile) return "✅"; // Downloaded
+            if (AirDate.HasValue && AirDate.Value > DateTime.Now) return "📅"; // Future episode
+            return "❌"; // Missing
+        }
+        
+        private string GetStatusText()
+        {
+            if (!Monitored) return "Not Monitored";
+            if (HasFile) return $"Downloaded ({Quality})";
+            if (AirDate.HasValue && AirDate.Value > DateTime.Now) return $"Unaired ({AirDate.Value:MMM dd})";
+            return "Missing";
+        }
+    }
+
     public class SonarrImage
     {
         [JsonProperty("coverType")]
