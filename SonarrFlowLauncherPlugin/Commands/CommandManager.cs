@@ -1,3 +1,6 @@
+using System;
+using System.Linq;
+using System.Threading.Tasks;
 using Flow.Launcher.Plugin;
 using SonarrFlowLauncherPlugin.Services;
 
@@ -46,7 +49,6 @@ namespace SonarrFlowLauncherPlugin.Commands
                 var refreshCommand = _commands.FirstOrDefault(c => c is RefreshCommand) as RefreshCommand;
                 if (refreshCommand != null)
                 {
-                    // Direct call to handle calendar refresh
                     return new List<Result>
                     {
                         new Result
@@ -78,12 +80,11 @@ namespace SonarrFlowLauncherPlugin.Commands
 
             // Handle special case for standalone -n (overdue refresh)
             if (query.Search.StartsWith("-n", StringComparison.OrdinalIgnoreCase) && 
-                !query.Search.StartsWith("-new", StringComparison.OrdinalIgnoreCase)) // Avoid conflict with potential -new commands
+                !query.Search.StartsWith("-new", StringComparison.OrdinalIgnoreCase))
             {
                 var refreshCommand = _commands.FirstOrDefault(c => c is RefreshCommand) as RefreshCommand;
                 if (refreshCommand != null)
                 {
-                    // Direct call to handle overdue refresh
                     return new List<Result>
                     {
                         new Result
@@ -115,12 +116,11 @@ namespace SonarrFlowLauncherPlugin.Commands
 
             // Handle special case for standalone -y (yesterday refresh)
             if (query.Search.StartsWith("-y", StringComparison.OrdinalIgnoreCase) && 
-                !query.Search.StartsWith("-year", StringComparison.OrdinalIgnoreCase)) // Avoid conflict with potential -year commands
+                !query.Search.StartsWith("-year", StringComparison.OrdinalIgnoreCase))
             {
                 var refreshCommand = _commands.FirstOrDefault(c => c is RefreshCommand) as RefreshCommand;
                 if (refreshCommand != null)
                 {
-                    // Direct call to handle yesterday refresh
                     return new List<Result>
                     {
                         new Result
@@ -150,7 +150,6 @@ namespace SonarrFlowLauncherPlugin.Commands
                 }
             }
 
-            var command = _commands.FirstOrDefault(c => query.Search.StartsWith(c.CommandFlag));
             // Always check offline commands first
             var offlineCommand = _offlineCommands.FirstOrDefault(c => query.Search.StartsWith(c.CommandFlag));
             
@@ -199,7 +198,6 @@ namespace SonarrFlowLauncherPlugin.Commands
 
         private List<Result> GetAvailableCommands(bool hasApiKey)
         {
-            var results = _commands.Select(command => new Result
             var results = new List<Result>();
 
             // Always show offline commands
@@ -210,19 +208,6 @@ namespace SonarrFlowLauncherPlugin.Commands
                 IcoPath = "Images\\icon.png",
                 Score = 100,
                 Action = _ => false
-            }).ToList();
-
-            // Add additional information for the new calendar refresh shortcuts
-            results.Add(new Result
-            {
-                Title = "📅 Calendar Refresh Shortcuts",
-                SubTitle = "snr -c (refresh today's calendar) | snr -y (refresh yesterday) | snr -n (refresh overdue episodes)",
-                IcoPath = "Images\\icon.png",
-                Score = 95,
-                Action = _ => false
-            });
-
-            return results;
             }));
 
             // Show API commands if available
@@ -236,6 +221,16 @@ namespace SonarrFlowLauncherPlugin.Commands
                     Score = 90,
                     Action = _ => false
                 }));
+
+                // Add additional information for the new calendar refresh shortcuts
+                results.Add(new Result
+                {
+                    Title = "📅 Calendar Refresh Shortcuts",
+                    SubTitle = "snr -c (refresh today's calendar) | snr -y (refresh yesterday) | snr -n (refresh overdue episodes)",
+                    IcoPath = "Images\\icon.png",
+                    Score = 95,
+                    Action = _ => false
+                });
             }
             else
             {
