@@ -1,200 +1,424 @@
 # Sonarr Flow Launcher Plugin
 
-A Flow Launcher plugin to control Sonarr directly from your launcher. Quickly check upcoming episodes, monitor downloads, search your library, and intelligently refresh series based on calendar data.
+A comprehensive Flow Launcher plugin for Sonarr integration. Search your library, monitor downloads, view upcoming episodes, and intelligently refresh series - all from your launcher.
 
-## Features
+![Version](https://img.shields.io/badge/version-1.0.5-blue) ![Flow Launcher](https://img.shields.io/badge/Flow%20Launcher-compatible-green) ![.NET](https://img.shields.io/badge/.NET-7.0-purple)
 
-### Calendar View (`snr -c`)
-View upcoming episodes with various time ranges:
-- `snr -c today`: Shows today's episodes
-- `snr -c tomorrow`: Shows tomorrow's episodes
-- `snr -c week`: Shows this week's episodes
-- `snr -c next week`: Shows next week's episodes
-- `snr -c month`: Shows this month's episodes
+## 🚀 Quick Start
 
-### Activity Monitor (`snr -a`)
-View current downloads and recent history:
-- `snr -a q` or `snr -a queue`: Shows active downloads with progress
-- `snr -a h` or `snr -a history`: Shows recent activity history
-- Shows download progress and quality information (update frequency limited by Sonarr)
-- Displays episode information (S##E##)
-- User-friendly timestamps (Today/Yesterday/Date)
+<details>
+<summary><b>📋 Setup Guide</b></summary>
 
-### Library Search (`snr -l`)
-Search your Sonarr library:
-- Quick access to series information
-- View monitored status
-- Series statistics and details
-- One-click access to series in browser
+### Guided Setup (Recommended)
+1. Install the plugin
+2. Type `snr` in Flow Launcher
+3. Follow the **"🔧 Setup Required"** prompt
+4. Type `snr -setup` and follow the interactive wizard
 
-### Smart Refresh System (`snr -r`)
-Intelligently refresh series based on calendar data and air times:
+### Manual Setup
+1. Open Flow Launcher Settings → Plugins → Sonarr Explorer
+2. Configure:
+   - **Server URL**: `localhost:8989` (adjust port as needed)
+   - **API Key**: Found in Sonarr → Settings → General → API Key
+   - **HTTPS**: Toggle if using SSL
 
-#### Calendar-Based Refresh Options
-- `snr -r c` or `snr -c`: **Today's Calendar** - Refresh all series that have episodes airing today
-- `snr -r y` or `snr -y`: **Yesterday's Calendar** - Refresh all series that had episodes yesterday
-- `snr -r n` or `snr -n`: **Overdue Episodes** - Refresh series with episodes that have already aired (with 10-minute buffer)
-- `snr -r {days}`: **Prior Days** - Refresh series from past N days (e.g., `snr -r 3` for past 3 days, `snr -r 7` for past week)
+### Finding Your API Key
+1. Open Sonarr web interface
+2. Go to Settings → General
+3. Copy the long string from the "API Key" field
 
-#### Traditional Refresh Options
-- `snr -r all`: Refresh all series (traditional method)
-- `snr -r [series name]`: Search and refresh specific series
+</details>
 
-#### Smart Features
-- **Timezone Handling**: Automatically converts UTC air times to local time
-- **Buffer Time**: 10-minute grace period before considering episodes "overdue"
-- **Duplicate Prevention**: Groups episodes by series ID to avoid multiple refreshes
-- **API Rate Limiting**: 100ms delays between refresh commands to prevent server overload
-- **Comprehensive Logging**: Detailed debug output for troubleshooting
+<details>
+<summary><b>⚡ Installation Options</b></summary>
 
-#### Usage Examples
-```
-# Refresh series with episodes today
-snr -c
-
-# Refresh series with overdue episodes
-snr -n
-
-# Refresh series from past 3 days
-snr -r 3
-
-# Refresh series from past week
-snr -r 7
-
-# Traditional refresh all
-snr -r all
-```
-
-## Installation
-
-### From Release
-1. Download the latest release
+### From Release (Recommended)
+1. Download latest release from GitHub
 2. Extract to `%APPDATA%\FlowLauncher\Plugins\SonarrFlowLauncherPlugin`
 3. Restart Flow Launcher
 
 ### From Source
-1. Clone this repository
-2. Run `.\deploy.ps1` (requires PowerShell with ExecutionPolicy allowing script execution)
-3. Restart Flow Launcher if it doesn't restart automatically
+```powershell
+git clone https://github.com/AtaraxyState/Sonarr-Explorer.git
+cd Sonarr-Explorer
+.\deploy.ps1
+```
 
-## Configuration
+</details>
 
-Configure the plugin through Flow Launcher settings:
+---
 
-1. Server URL (e.g., `localhost:8989`)
-2. API Key (from Sonarr's Settings > General)
-3. HTTPS toggle (if using SSL)
+## 📖 Core Features
 
-**Settings updates are applied immediately** - no Flow Launcher restart required after changing configuration.
+<details>
+<summary><b>📅 Calendar & Episode Tracking</b></summary>
 
-## Technical Details
+### View Upcoming Episodes (`snr -c`)
+- **Today**: `snr -c today` - Episodes airing today
+- **Tomorrow**: `snr -c tomorrow` - Tomorrow's schedule  
+- **This Week**: `snr -c week` - Week overview
+- **Next Week**: `snr -c "next week"` - Upcoming week
+- **This Month**: `snr -c month` - Monthly view
+
+### Smart Episode Information
+- **Air Times**: Automatic timezone conversion (UTC → Local)
+- **Episode Details**: Season/Episode numbers, titles, overviews
+- **Status Indicators**: Monitored/unmonitored, downloaded status
+- **User-Friendly Dates**: "Today", "Tomorrow", specific dates
+
+</details>
+
+<details>
+<summary><b>📊 Activity & Download Monitoring</b></summary>
+
+### Current Downloads (`snr -a q`)
+- **Live Progress**: Real-time download percentages
+- **Quality Info**: Resolution, codec, release group
+- **Episode Context**: Series name, season/episode numbers
+- **Status Tracking**: Downloading, importing, completed
+
+### Download History (`snr -a h`)
+- **Recent Activity**: Last completed downloads
+- **Success/Failure Status**: Color-coded indicators
+- **Time Context**: "Today", "Yesterday", specific dates
+- **Quality Details**: Final file quality and specifications
+
+### Combined View (`snr -a`)
+Shows both queue and recent history for complete activity overview.
+
+</details>
+
+<details>
+<summary><b>🔍 Library Search & Management</b></summary>
+
+### Series Search (`snr -l [search term]`)
+- **Instant Search**: Type to find series in your library
+- **Series Details**: Status, statistics, poster images
+- **Quick Access**: One-click to open series in Sonarr web UI
+- **Status Overview**: Monitored status, episode counts
+
+### Library Overview (`snr -l`)
+- Browse entire library
+- Filter by status (monitored/unmonitored)
+- Quick series information access
+
+</details>
+
+<details>
+<summary><b>🔄 Intelligent Refresh System</b></summary>
+
+### Calendar-Based Refresh (Smart)
+- **Today's Episodes**: `snr -c` or `snr -r c` - Refresh series with today's episodes
+- **Yesterday's Episodes**: `snr -y` or `snr -r y` - Catch up on yesterday's shows
+- **Overdue Episodes**: `snr -n` or `snr -r n` - Refresh shows with episodes that already aired
+- **Past N Days**: `snr -r 3` - Refresh series from past 3 days (any number)
+
+### Traditional Refresh Options
+- **All Series**: `snr -r all` - Full library refresh
+- **Specific Series**: `snr -r [series name]` - Search and refresh individual shows
+
+### Advanced Features
+- **Timezone Intelligence**: Automatic UTC to local time conversion
+- **Grace Period**: 10-minute buffer before considering episodes "overdue"
+- **Duplicate Prevention**: Avoids multiple refreshes of the same series
+- **Rate Limiting**: Prevents server overload with 100ms delays
+- **Detailed Logging**: Comprehensive debug information
+
+</details>
+
+---
+
+## 🎯 Command Reference
+
+<details>
+<summary><b>📋 Complete Command List</b></summary>
+
+| Command | Alternative | Description |
+|---------|-------------|-------------|
+| **Calendar & Episodes** |
+| `snr -c` | `snr -r c` | 📅 Refresh today's calendar series |
+| `snr -y` | `snr -r y` | 📅 Refresh yesterday's calendar series |
+| `snr -n` | `snr -r n` | ⏰ Refresh overdue episodes |
+| `snr -r 3` | | 📅 Refresh series from past 3 days |
+| `snr -c today` | | 📺 View today's episodes |
+| `snr -c week` | | 📺 View this week's episodes |
+| **Activity & Downloads** |
+| `snr -a` | | 📊 Show activity overview |
+| `snr -a q` | `snr -a queue` | 📥 Show download queue |
+| `snr -a h` | `snr -a history` | 📜 Show download history |
+| **Library & Search** |
+| `snr -l` | | 🔍 Browse library |
+| `snr -l [term]` | | 🔍 Search for series |
+| `snr [series]` | | 🔍 Quick series search |
+| **Management** |
+| `snr -r all` | | 🔄 Refresh all series |
+| `snr -r [series]` | | 🔄 Refresh specific series |
+| **Utilities** |
+| `snr -setup` | | 🔧 Guided setup wizard |
+| `snr -help` | | ❓ Show help information |
+| `snr -about` | | ℹ️ Plugin information |
+| `snr -test` | | 🧪 Test connection & settings |
+
+</details>
+
+<details>
+<summary><b>💡 Usage Examples</b></summary>
+
+### Daily Workflow
+```
+# Check what's airing today
+snr -c today
+
+# Refresh today's shows for new episodes
+snr -c
+
+# Check download progress
+snr -a q
+
+# Look for a specific series
+snr breaking bad
+```
+
+### Weekly Maintenance
+```
+# Refresh past week's shows
+snr -r 7
+
+# Check what's coming this week
+snr -c week
+
+# Review recent download history
+snr -a h
+```
+
+### Troubleshooting
+```
+# Test your connection
+snr -test
+
+# Get help with commands
+snr -help
+
+# Check plugin information
+snr -about
+```
+
+</details>
+
+---
+
+## 🔧 Technical Details
+
+<details>
+<summary><b>⚙️ Architecture & Performance</b></summary>
 
 ### Threading Model
-The plugin properly handles WPF threading requirements:
-- UI components are created only on the main thread
-- Service components can be refreshed on background threads
-- Settings changes are applied without requiring restart
+- **UI Thread Safety**: All UI components created on main thread
+- **Background Processing**: Service operations run asynchronously
+- **Settings Hot-Reload**: Configuration changes applied immediately
+- **No Restart Required**: Settings updates work without Flow Launcher restart
 
-### Overdue Detection Algorithm
-The overdue detection uses enhanced logic for accurate air time checking:
+### API Integration
+- **Rate Limiting**: 100ms delays between refresh commands
+- **Error Handling**: Graceful degradation on connection issues
+- **Timeout Management**: Proper handling of slow responses
+- **Batch Operations**: Efficient grouping of related requests
 
-1. **DateTime Parsing**: Properly handles Sonarr's UTC timestamps
-2. **Timezone Conversion**: Converts UTC air times to local time for comparison
-3. **Buffer Time**: 10-minute grace period prevents false positives
-4. **Detailed Logging**: Shows exactly when episodes air vs current time
+### Data Processing
+- **Timezone Handling**: Automatic UTC to local time conversion
+- **Date Parsing**: Robust handling of various date formats
+- **Memory Management**: Efficient caching and cleanup
+- **Performance Optimization**: Minimal UI blocking operations
 
-### Calendar Refresh Intelligence
-The calendar-based refresh system:
-- Fetches calendar data for specified date ranges
-- Identifies unique series with episodes in the timeframe
-- Sends targeted RescanSeries commands only for relevant series
-- Provides detailed success/failure tracking
+</details>
 
-## Development
+<details>
+<summary><b>🧠 Smart Algorithms</b></summary>
+
+### Overdue Detection Logic
+1. **Parse Air Dates**: Handle Sonarr's UTC timestamps
+2. **Convert Timezones**: UTC → Local time for accurate comparison
+3. **Apply Buffer**: 10-minute grace period prevents false positives
+4. **Current Time Check**: Compare against actual local time
+5. **Debug Logging**: Detailed output for troubleshooting
+
+### Calendar Intelligence
+1. **Date Range Fetching**: Efficient calendar API calls
+2. **Series Grouping**: Prevent duplicate refresh commands
+3. **Targeted Refresh**: Only refresh series with relevant episodes
+4. **Success Tracking**: Monitor and report refresh status
+
+### Search Optimization
+- **Fuzzy Matching**: Find series even with partial/inexact names
+- **Relevance Scoring**: Best matches appear first
+- **Context Awareness**: Recent searches get priority
+- **Performance Caching**: Reduce repeated API calls
+
+</details>
+
+<details>
+<summary><b>🛠️ Development Information</b></summary>
 
 ### Prerequisites
 - .NET 7.0 SDK
-- Flow Launcher
+- Flow Launcher installed
 - PowerShell (for deployment scripts)
+- Sonarr instance for testing
 
-### Building
+### Build Commands
 ```powershell
+# Build the project
 dotnet build
-```
 
-### Testing
-```powershell
-.\run-tests.ps1
+# Run in debug mode
+dotnet build --configuration Debug
+
+# Create release build
+dotnet build --configuration Release
 ```
 
 ### Deployment
 ```powershell
-# With execution policy bypass
+# Deploy with execution policy bypass
 powershell -ExecutionPolicy Bypass -File .\deploy.ps1
 
-# Or if you trust the scripts
+# Deploy if scripts are trusted
 .\deploy.ps1
 ```
 
-### Development Tips
-- The plugin is automatically deployed to: `%APPDATA%\FlowLauncher\Plugins\SonarrFlowLauncherPlugin`
-- Use `Flow.Launcher.Plugin.SDK` for Flow Launcher integration
-- Debug logs can be found in Flow Launcher's logs directory
-- Enable debug logging to see detailed overdue detection and timezone conversion information
+### Project Structure
+```
+SonarrFlowLauncherPlugin/
+├── Commands/           # Command handlers
+├── Services/          # API and business logic
+├── Models/            # Data models
+├── Images/            # Plugin icons
+└── plugin.json        # Plugin manifest
+```
 
-## Troubleshooting
-
-### General Issues
-1. **Plugin Not Loading**
-   - Verify Flow Launcher is running
-   - Check if the plugin is listed in Flow Launcher settings
-   - Ensure all DLLs are properly copied to the plugin directory
-
-2. **Connection Issues**
-   - Verify Sonarr is running and accessible
-   - Check API key is correct
-   - Ensure URL includes port number
-   - Verify HTTPS setting matches your Sonarr configuration
-
-### Settings Issues
-3. **Settings Not Updating**
-   - Configuration changes are applied immediately (no restart needed)
-   - If issues persist, check Flow Launcher logs for threading errors
-   - Verify plugin.yaml file has write permissions
-
-### Calendar/Refresh Issues
-4. **Overdue Detection Not Working**
-   - Check Flow Launcher debug logs for timezone conversion details
-   - Verify Sonarr calendar data includes proper air times
-   - Episodes are only considered "overdue" after 10+ minutes past air time
-
-5. **No Episodes Found in Calendar**
-   - Verify date ranges in Sonarr calendar
-   - Check that series are properly monitored in Sonarr
-   - Ensure episodes have proper air dates set
-
-## Command Reference
-
-| Command | Alias | Description |
-|---------|-------|-------------|
-| `snr -c` | `snr -r c` | Refresh today's calendar series |
-| `snr -y` | `snr -r y` | Refresh yesterday's calendar series |
-| `snr -n` | `snr -r n` | Refresh overdue episodes |
-| `snr -r {number}` | | Refresh series from past N days |
-| `snr -r all` | | Refresh all series |
-| `snr -a` | | Show activity (queue + history) |
-| `snr -l` | | Search library |
-
-## License
-
-MIT License
-
-## Credits
-
-- Uses official Sonarr icon from [Sonarr's repository](https://github.com/Sonarr/Sonarr)
-- Built for [Flow Launcher](https://github.com/Flow-Launcher/Flow.Launcher)
+</details>
 
 ---
 
-*A Flow Launcher plugin for Sonarr integration with intelligent calendar-based refresh capabilities*  
-*Developed in [Cursor](https://cursor.sh/)*
+## 🚨 Troubleshooting
+
+<details>
+<summary><b>🔍 Common Issues & Solutions</b></summary>
+
+### Plugin Not Working
+**Symptoms**: Plugin doesn't appear or respond
+- ✅ Verify Flow Launcher is running
+- ✅ Check Plugins list in Flow Launcher settings  
+- ✅ Ensure all files copied to plugin directory
+- ✅ Restart Flow Launcher completely
+
+### Connection Problems
+**Symptoms**: "Connection failed" or timeout errors
+- ✅ Verify Sonarr is running and accessible
+- ✅ Test URL in browser: `http://localhost:8989`
+- ✅ Check API key is correct (copy from Sonarr settings)
+- ✅ Verify port number matches your Sonarr config
+- ✅ Ensure HTTPS setting matches your setup
+
+### Setup Issues
+**Symptoms**: Can't configure or settings not saving
+- ✅ Try guided setup: `snr -setup`
+- ✅ Check Flow Launcher has write permissions
+- ✅ Verify plugin.json file isn't corrupted
+- ✅ Use manual settings panel as alternative
+
+### Calendar/Refresh Problems
+**Symptoms**: No episodes found or refresh not working
+- ✅ Check Sonarr calendar has data for the date range
+- ✅ Verify series are monitored in Sonarr
+- ✅ Ensure episodes have proper air dates set
+- ✅ Check Flow Launcher debug logs for detailed info
+
+</details>
+
+<details>
+<summary><b>🐛 Debug Information</b></summary>
+
+### Enable Debug Logging
+1. Open Flow Launcher settings
+2. Go to General → Logging
+3. Enable Debug level logging
+4. Restart Flow Launcher
+5. Check logs in `%APPDATA%\FlowLauncher\Logs`
+
+### What to Look For
+- **Connection attempts**: API call success/failure
+- **Timezone conversions**: UTC to local time calculations  
+- **Episode detection**: Which episodes are found/considered overdue
+- **Threading issues**: UI thread violations or deadlocks
+
+### Common Log Messages
+```
+✅ [INFO] Successfully connected to Sonarr
+❌ [ERROR] Failed to connect: Connection refused
+🔄 [DEBUG] Converting UTC time 2024-01-15T20:00:00Z to local
+⏰ [DEBUG] Episode aired at 15:00, current time 15:05 - NOT overdue (within buffer)
+```
+
+</details>
+
+---
+
+## 📞 Support & Community
+
+<details>
+<summary><b>💬 Getting Help</b></summary>
+
+### GitHub Issues
+- **Bug Reports**: Use issue templates for detailed reports
+- **Feature Requests**: Suggest new functionality
+- **Questions**: Ask for help with setup or usage
+
+### Self-Help Resources
+- **Built-in Help**: `snr -help` for command reference
+- **Test Connection**: `snr -test` for diagnostics
+- **Plugin Info**: `snr -about` for version details
+
+### Contributing
+- Fork the repository
+- Create feature branches
+- Submit pull requests
+- Follow existing code style
+
+</details>
+
+<details>
+<summary><b>🏆 Credits & License</b></summary>
+
+### Acknowledgments
+- **Sonarr Team**: For the excellent API and official icons
+- **Flow Launcher**: For the fantastic launcher platform
+- **Community**: For testing, feedback, and feature suggestions
+
+### Technologies Used
+- **.NET 7.0**: Core framework
+- **Flow Launcher SDK**: Plugin integration
+- **Newtonsoft.Json**: JSON processing
+- **System.Net.Http**: API communication
+
+### License
+MIT License - Free to use, modify, and distribute
+
+### Development Environment
+- **Cursor**: Primary development IDE
+- **GitHub**: Source control and releases
+- **PowerShell**: Deployment automation
+
+</details>
+
+---
+
+<div align="center">
+
+**🎯 A comprehensive Flow Launcher plugin for Sonarr integration**  
+*Search • Monitor • Refresh • Track*
+
+[![GitHub](https://img.shields.io/badge/GitHub-Repository-blue)](https://github.com/AtaraxyState/Sonarr-Explorer) 
+[![Flow Launcher](https://img.shields.io/badge/Flow%20Launcher-Plugin-green)](https://www.flowlauncher.com/)
+
+</div>
