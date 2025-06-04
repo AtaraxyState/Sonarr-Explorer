@@ -68,9 +68,11 @@ namespace SonarrFlowLauncherPlugin.Commands
                                 results.Add(new Result
                                 {
                                     Title = $"⬇️ {item.Title}",
-                                    SubTitle = $"S{item.SeasonNumber:D2}E{item.EpisodeNumber:D2} - {item.Status} ({item.Progress:F1}%) - {item.Quality}",
+                                    SubTitle = $"S{item.SeasonNumber:D2}E{item.EpisodeNumber:D2} - {item.Status} ({item.Progress:F1}%) - {item.Quality} | Right-click for options",
                                     IcoPath = !string.IsNullOrEmpty(item.PosterPath) ? item.PosterPath : "Images\\icon.png",
-                                    Score = 100 - totalItems
+                                    Score = 100 - totalItems,
+                                    ContextData = item,
+                                    Action = _ => false
                                 });
                                 totalItems++;
                             }
@@ -107,9 +109,11 @@ namespace SonarrFlowLauncherPlugin.Commands
                                 results.Add(new Result
                                 {
                                     Title = $"{icon} {item.Title} - {episodeInfo}",
-                                    SubTitle = $"{item.EventType} - {item.Quality} - {item.Date:g}",
+                                    SubTitle = $"{item.EventType} - {item.Quality} - {item.Date:g} | Right-click for options",
                                     IcoPath = !string.IsNullOrEmpty(item.PosterPath) ? item.PosterPath : "Images\\icon.png",
-                                    Score = 100 - totalItems
+                                    Score = 100 - totalItems,
+                                    ContextData = item,
+                                    Action = _ => false
                                 });
                                 totalItems++;
                             }
@@ -124,9 +128,11 @@ namespace SonarrFlowLauncherPlugin.Commands
                             results.Add(new Result
                             {
                                 Title = $"⬇️ {item.Title}",
-                                SubTitle = $"S{item.SeasonNumber:D2}E{item.EpisodeNumber:D2} - {item.Status} ({item.Progress:F1}%) - {item.Quality}",
+                                SubTitle = $"S{item.SeasonNumber:D2}E{item.EpisodeNumber:D2} - {item.Status} ({item.Progress:F1}%) - {item.Quality} | Right-click for options",
                                 IcoPath = !string.IsNullOrEmpty(item.PosterPath) ? item.PosterPath : "Images\\icon.png",
-                                Score = 100 - totalItems
+                                Score = 100 - totalItems,
+                                ContextData = item,
+                                Action = _ => false
                             });
                             totalItems++;
                         }
@@ -147,9 +153,11 @@ namespace SonarrFlowLauncherPlugin.Commands
                             results.Add(new Result
                             {
                                 Title = $"{icon} {item.Title} - {episodeInfo}",
-                                SubTitle = $"{item.EventType} - {item.Quality} - {item.Date:g}",
+                                SubTitle = $"{item.EventType} - {item.Quality} - {item.Date:g} | Right-click for options",
                                 IcoPath = !string.IsNullOrEmpty(item.PosterPath) ? item.PosterPath : "Images\\icon.png",
-                                Score = 95 - totalItems
+                                Score = 95 - totalItems,
+                                ContextData = item,
+                                Action = _ => false
                             });
                             totalItems++;
                         }

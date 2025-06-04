@@ -11,5 +11,15 @@ namespace SonarrFlowLauncherPlugin.Models
         public int EpisodeNumber { get; set; }
         public string Quality { get; set; } = string.Empty;
         public string PosterPath { get; set; } = string.Empty;
+        
+        // Series information for context menus
+        public string SeriesTitle { get; set; } = string.Empty;
+        public string SeriesPath { get; set; } = string.Empty;
+        public string TitleSlug { get; set; } = string.Empty;
+        
+        // Episode file information for context menus
+        public int EpisodeFileId { get; set; }
+        public string EpisodeFilePath { get; set; } = string.Empty;
+        public string RelativePath { get; set; } = string.Empty;
     }
 } 

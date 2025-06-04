@@ -111,8 +111,23 @@ namespace SonarrFlowLauncherPlugin.Services
                 Progress = CalculateProgress(record),
                 EstimatedCompletionTime = record.estimatedCompletionTime,
                 Protocol = record.protocol ?? string.Empty,
-                DownloadClient = record.downloadClient ?? string.Empty
+                DownloadClient = record.downloadClient ?? string.Empty,
+                
+                // Populate series information for context menus
+                SeriesTitle = record.series?.title ?? string.Empty,
+                SeriesPath = record.series?.path ?? string.Empty,
+                TitleSlug = record.series?.titleSlug ?? string.Empty,
+                
+                // Populate episode file information if available
+                EpisodeFileId = record.episode?.episodeFileId ?? 0,
+                RelativePath = record.episode?.relativePath ?? string.Empty
             };
+
+            // Construct full episode file path if we have series path and relative path
+            if (!string.IsNullOrEmpty(queueItem.SeriesPath) && !string.IsNullOrEmpty(queueItem.RelativePath))
+            {
+                queueItem.EpisodeFilePath = System.IO.Path.Combine(queueItem.SeriesPath, queueItem.RelativePath);
+            }
 
             // Download poster if available
             var posterUrl = _seriesService.ExtractPosterUrlFromRecord(record.series?.images);
@@ -135,8 +150,23 @@ namespace SonarrFlowLauncherPlugin.Services
                 EpisodeNumber = record.episodeInfo?.episodeNumber ?? record.episode?.episodeNumber ?? 0,
                 Quality = record.quality?.quality?.name ?? string.Empty,
                 EventType = record.eventType ?? string.Empty,
-                Date = record.date
+                Date = record.date,
+                
+                // Populate series information for context menus
+                SeriesTitle = record.series?.title ?? record.sourceTitle ?? string.Empty,
+                SeriesPath = record.series?.path ?? string.Empty,
+                TitleSlug = record.series?.titleSlug ?? string.Empty,
+                
+                // Populate episode file information if available
+                EpisodeFileId = record.episodeFile?.id ?? record.episode?.episodeFileId ?? 0,
+                RelativePath = record.episodeFile?.relativePath ?? record.episode?.relativePath ?? string.Empty
             };
+
+            // Construct full episode file path if we have series path and relative path
+            if (!string.IsNullOrEmpty(historyItem.SeriesPath) && !string.IsNullOrEmpty(historyItem.RelativePath))
+            {
+                historyItem.EpisodeFilePath = System.IO.Path.Combine(historyItem.SeriesPath, historyItem.RelativePath);
+            }
 
             // Download poster if available
             var posterUrl = _seriesService.ExtractPosterUrlFromRecord(record.series?.images);

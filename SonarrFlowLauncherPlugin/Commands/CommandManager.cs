@@ -48,8 +48,8 @@ namespace SonarrFlowLauncherPlugin.Commands
                 return GetAvailableCommands(hasApiKey);
             }
 
-            // Handle special case for standalone -c (calendar refresh)
-            if (query.Search.StartsWith("-c", StringComparison.OrdinalIgnoreCase))
+            // Handle special case for standalone -n (overdue refresh) - ONLY if no additional parameters
+            if (query.Search.Equals("-n", StringComparison.OrdinalIgnoreCase))
             {
                 var refreshCommand = _commands.FirstOrDefault(c => c is RefreshCommand) as RefreshCommand;
                 if (refreshCommand != null)
@@ -58,43 +58,7 @@ namespace SonarrFlowLauncherPlugin.Commands
                     {
                         new Result
                         {
-                            Title = "📅 Refresh Today's Calendar Series",
-                            SubTitle = "Refreshing all series that have episodes in today's calendar...",
-                            IcoPath = "Images\\icon.png",
-                            Score = 100,
-                            Action = _ =>
-                            {
-                                Task.Run(async () =>
-                                {
-                                    try
-                                    {
-                                        await refreshCommand.GetSonarrService().RefreshTodaysCalendarSeriesAsync();
-                                        System.Diagnostics.Debug.WriteLine("Calendar refresh completed successfully");
-                                    }
-                                    catch (Exception ex)
-                                    {
-                                        System.Diagnostics.Debug.WriteLine($"Failed to refresh today's calendar series: {ex.Message}");
-                                    }
-                                });
-                                return true;
-                            }
-                        }
-                    };
-                }
-            }
-
-            // Handle special case for standalone -n (overdue refresh)
-            if (query.Search.StartsWith("-n", StringComparison.OrdinalIgnoreCase) && 
-                !query.Search.StartsWith("-new", StringComparison.OrdinalIgnoreCase))
-            {
-                var refreshCommand = _commands.FirstOrDefault(c => c is RefreshCommand) as RefreshCommand;
-                if (refreshCommand != null)
-                {
-                    return new List<Result>
-                    {
-                        new Result
-                        {
-                            Title = "⏰ Refresh Overdue Episodes",
+                            Title = "🔄 Refresh Overdue Episodes",
                             SubTitle = "Refreshing series with episodes that have already aired today...",
                             IcoPath = "Images\\icon.png",
                             Score = 100,
@@ -119,9 +83,8 @@ namespace SonarrFlowLauncherPlugin.Commands
                 }
             }
 
-            // Handle special case for standalone -y (yesterday refresh)
-            if (query.Search.StartsWith("-y", StringComparison.OrdinalIgnoreCase) && 
-                !query.Search.StartsWith("-year", StringComparison.OrdinalIgnoreCase))
+            // Handle special case for standalone -y (yesterday refresh) - ONLY if no additional parameters
+            if (query.Search.Equals("-y", StringComparison.OrdinalIgnoreCase))
             {
                 var refreshCommand = _commands.FirstOrDefault(c => c is RefreshCommand) as RefreshCommand;
                 if (refreshCommand != null)
@@ -130,7 +93,7 @@ namespace SonarrFlowLauncherPlugin.Commands
                     {
                         new Result
                         {
-                            Title = "📅 Refresh Yesterday's Calendar Series",
+                            Title = "↻ Refresh Yesterday's Calendar Series",
                             SubTitle = "Refreshing all series that had episodes in yesterday's calendar...",
                             IcoPath = "Images\\icon.png",
                             Score = 100,

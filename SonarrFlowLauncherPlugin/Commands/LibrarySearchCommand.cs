@@ -1,5 +1,6 @@
 using Flow.Launcher.Plugin;
 using SonarrFlowLauncherPlugin.Services;
+using System.Diagnostics;
 
 namespace SonarrFlowLauncherPlugin.Commands
 {
@@ -57,13 +58,20 @@ namespace SonarrFlowLauncherPlugin.Commands
                         episodeInfo = "No Episodes";
                     }
 
+                    var hasLocalPath = !string.IsNullOrEmpty(show.Path) && System.IO.Directory.Exists(show.Path);
+                    var subTitle = hasLocalPath 
+                        ? $"{show.Network} | {show.Status} | {stats.SeasonCount} Seasons | {episodeInfo} | 📁 Right-click for options"
+                        : $"{show.Network} | {show.Status} | {stats.SeasonCount} Seasons | {episodeInfo}";
+
                     results.Add(new Result
                     {
                         Title = show.Title,
-                        SubTitle = $"{show.Network} | {show.Status} | {stats.SeasonCount} Seasons | {episodeInfo}",
+                        SubTitle = subTitle,
                         IcoPath = !string.IsNullOrEmpty(show.PosterPath) ? show.PosterPath : "Images\\icon.png",
                         Score = 100,
-                        Action = _ => SonarrService.OpenSeriesInBrowser(show.TitleSlug)
+                        Action = _ => SonarrService.OpenSeriesInBrowser(show.TitleSlug),
+                        ContextData = show,
+                        ActionKeywordAssigned = query.ActionKeyword
                     });
                 }
             }

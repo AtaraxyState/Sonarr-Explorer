@@ -136,12 +136,14 @@ Shows both queue and recent history for complete activity overview.
 | Command | Alternative | Description |
 |---------|-------------|-------------|
 | **Calendar & Episodes** |
-| `snr -c` | `snr -r c` | 📅 Refresh today's calendar series |
+| `snr -c` | | 📺 View upcoming episodes (options below) |
+| `snr -c today` | | 📺 View today's episodes |
+| `snr -c week` | | 📺 View this week's episodes |
+| `snr -c month` | | 📺 View this month's episodes |
+| `snr -r c` | | 📅 Refresh today's calendar series |
 | `snr -y` | `snr -r y` | 📅 Refresh yesterday's calendar series |
 | `snr -n` | `snr -r n` | ⏰ Refresh overdue episodes |
 | `snr -r 3` | | 📅 Refresh series from past 3 days |
-| `snr -c today` | | 📺 View today's episodes |
-| `snr -c week` | | 📺 View this week's episodes |
 | **Activity & Downloads** |
 | `snr -a` | | 📊 Show activity overview |
 | `snr -a q` | `snr -a queue` | 📥 Show download queue |
@@ -170,7 +172,7 @@ Shows both queue and recent history for complete activity overview.
 snr -c today
 
 # Refresh today's shows for new episodes
-snr -c
+snr -r c
 
 # Check download progress
 snr -a q

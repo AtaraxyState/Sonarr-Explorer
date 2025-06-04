@@ -62,33 +62,32 @@ namespace SonarrFlowLauncherPlugin.Commands
                 {
                     results.Add(new Result
                     {
-                        Title = "Refresh All Series",
+                        Title = "↻ Refresh All Series",
                         SubTitle = "Trigger a refresh/rescan of all series in Sonarr",
                         IcoPath = "Images\\icon.png",
                         Score = 100,
                         Action = _ =>
                         {
-                            // Use Task.Run to avoid blocking UI thread
                             Task.Run(async () =>
                             {
                                 try
                                 {
                                     await SonarrService.RefreshAllSeriesAsync();
-                                    System.Diagnostics.Debug.WriteLine("Refresh all series command sent successfully");
+                                    System.Diagnostics.Debug.WriteLine("All series refresh completed successfully");
                                 }
                                 catch (Exception ex)
                                 {
                                     System.Diagnostics.Debug.WriteLine($"Failed to refresh all series: {ex.Message}");
                                 }
                             });
-                            return true; // Return immediately, don't wait for completion
+                            return true;
                         }
                     });
 
                     // Add calendar-based options
                     results.Add(new Result
                     {
-                        Title = "📅 Refresh Today's Calendar Series",
+                        Title = "🔄 Refresh Today's Calendar Series",
                         SubTitle = "snr -r c - Refresh all series that have episodes in today's calendar",
                         IcoPath = "Images\\icon.png",
                         Score = 95,
@@ -99,7 +98,7 @@ namespace SonarrFlowLauncherPlugin.Commands
                                 try
                                 {
                                     await SonarrService.RefreshTodaysCalendarSeriesAsync();
-                                    System.Diagnostics.Debug.WriteLine("Refresh today's calendar series command sent successfully");
+                                    System.Diagnostics.Debug.WriteLine("Today's calendar refresh completed successfully");
                                 }
                                 catch (Exception ex)
                                 {
@@ -112,7 +111,7 @@ namespace SonarrFlowLauncherPlugin.Commands
 
                     results.Add(new Result
                     {
-                        Title = "📅 Refresh Yesterday's Calendar Series",
+                        Title = "↻ Refresh Yesterday's Calendar Series",
                         SubTitle = "snr -r y - Refresh all series that had episodes in yesterday's calendar",
                         IcoPath = "Images\\icon.png",
                         Score = 94,
@@ -123,7 +122,7 @@ namespace SonarrFlowLauncherPlugin.Commands
                                 try
                                 {
                                     await SonarrService.RefreshYesterdayCalendarSeriesAsync();
-                                    System.Diagnostics.Debug.WriteLine("Refresh yesterday's calendar series command sent successfully");
+                                    System.Diagnostics.Debug.WriteLine("Yesterday's calendar refresh completed successfully");
                                 }
                                 catch (Exception ex)
                                 {
@@ -136,7 +135,7 @@ namespace SonarrFlowLauncherPlugin.Commands
 
                     results.Add(new Result
                     {
-                        Title = "⏰ Refresh Overdue Episodes",
+                        Title = "🔄 Refresh Overdue Episodes",
                         SubTitle = "snr -r n - Refresh series with episodes that have already aired today",
                         IcoPath = "Images\\icon.png",
                         Score = 93,
@@ -147,7 +146,7 @@ namespace SonarrFlowLauncherPlugin.Commands
                                 try
                                 {
                                     await SonarrService.RefreshOverdueCalendarSeriesAsync();
-                                    System.Diagnostics.Debug.WriteLine("Refresh overdue episodes command sent successfully");
+                                    System.Diagnostics.Debug.WriteLine("Overdue refresh completed successfully");
                                 }
                                 catch (Exception ex)
                                 {
@@ -160,7 +159,7 @@ namespace SonarrFlowLauncherPlugin.Commands
 
                     results.Add(new Result
                     {
-                        Title = "🔢 Refresh Prior Days",
+                        Title = "↺ Refresh Prior Days",
                         SubTitle = "snr -r {number} - Refresh series from past N days (e.g., 'snr -r 3' for 3 days back)",
                         IcoPath = "Images\\icon.png",
                         Score = 92,
@@ -234,7 +233,7 @@ namespace SonarrFlowLauncherPlugin.Commands
                         // Also add option to refresh all
                         results.Add(new Result
                         {
-                            Title = "Refresh All Series",
+                            Title = "↻ Refresh All Series",
                             SubTitle = "Or refresh all series in Sonarr",
                             IcoPath = "Images\\icon.png",
                             Score = 50,
@@ -246,7 +245,7 @@ namespace SonarrFlowLauncherPlugin.Commands
                                     try
                                     {
                                         await SonarrService.RefreshAllSeriesAsync();
-                                        System.Diagnostics.Debug.WriteLine("Refresh all series command sent successfully");
+                                        System.Diagnostics.Debug.WriteLine("All series refresh completed successfully");
                                     }
                                     catch (Exception ex)
                                     {
@@ -293,7 +292,7 @@ namespace SonarrFlowLauncherPlugin.Commands
             {
                 new Result
                 {
-                    Title = "📅 Refresh Today's Calendar Series",
+                    Title = "🔄 Refresh Today's Calendar Series",
                     SubTitle = "Refreshing all series that have episodes in today's calendar...",
                     IcoPath = "Images\\icon.png",
                     Score = 100,
@@ -323,7 +322,7 @@ namespace SonarrFlowLauncherPlugin.Commands
             {
                 new Result
                 {
-                    Title = "⏰ Refresh Overdue Episodes",
+                    Title = "🔄 Refresh Overdue Episodes",
                     SubTitle = "Refreshing series with episodes that have already aired today...",
                     IcoPath = "Images\\icon.png",
                     Score = 100,
@@ -353,7 +352,7 @@ namespace SonarrFlowLauncherPlugin.Commands
             {
                 new Result
                 {
-                    Title = "📅 Refresh Yesterday's Calendar Series",
+                    Title = "↻ Refresh Yesterday's Calendar Series",
                     SubTitle = "Refreshing all series that had episodes in yesterday's calendar...",
                     IcoPath = "Images\\icon.png",
                     Score = 100,
@@ -383,7 +382,7 @@ namespace SonarrFlowLauncherPlugin.Commands
             {
                 new Result
                 {
-                    Title = $"🔢 Refresh Prior {daysBack} Day{(daysBack > 1 ? "s" : "")} Calendar Series",
+                    Title = $"↺ Refresh Prior {daysBack} Day{(daysBack > 1 ? "s" : "")} Calendar Series",
                     SubTitle = $"Refreshing all series that had episodes in the past {daysBack} day{(daysBack > 1 ? "s" : "")}...",
                     IcoPath = "Images\\icon.png",
                     Score = 100,
