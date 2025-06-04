@@ -6,13 +6,51 @@ using SonarrFlowLauncherPlugin.Services;
 
 namespace SonarrFlowLauncherPlugin.Commands
 {
+    /// <summary>
+    /// Central command router and manager for the Sonarr Flow Launcher plugin.
+    /// Handles command parsing, routing, and execution based on user input and API availability.
+    /// </summary>
+    /// <remarks>
+    /// The CommandManager coordinates between different types of commands:
+    /// - API-dependent commands (library search, calendar, activity, refresh)
+    /// - Offline utility commands (help, about, settings, external links)
+    /// - Special command shortcuts for common operations
+    /// 
+    /// Features include:
+    /// - Automatic fallback to offline commands when API is unavailable
+    /// - Command flag matching and routing
+    /// - Special shortcuts for frequently used operations (-n, -y)
+    /// - Help display for available commands based on configuration state
+    /// </remarks>
     public class CommandManager
     {
+        /// <summary>
+        /// Collection of commands that require API connectivity to function
+        /// </summary>
         private readonly List<BaseCommand> _commands;
+        
+        /// <summary>
+        /// Collection of commands that work without API connection (utilities, help, setup)
+        /// </summary>
         private readonly List<BaseCommand> _offlineCommands;
+        
+        /// <summary>
+        /// Default command used when no specific command flag is provided (library search)
+        /// </summary>
         private readonly LibrarySearchCommand _defaultCommand;
+        
+        /// <summary>
+        /// Setup command for guided plugin configuration
+        /// </summary>
         private readonly SetupCommand _setupCommand;
 
+        /// <summary>
+        /// Initializes a new CommandManager with all available commands and dependencies.
+        /// Sets up both API-dependent and offline command collections.
+        /// </summary>
+        /// <param name="sonarrService">Service for Sonarr API communication</param>
+        /// <param name="settings">Plugin settings and configuration</param>
+        /// <param name="context">Flow Launcher plugin context (optional, for setup command)</param>
         public CommandManager(SonarrService sonarrService, Settings settings, PluginInitContext? context = null)
         {
             // Setup command (works without API key)
@@ -41,6 +79,22 @@ namespace SonarrFlowLauncherPlugin.Commands
             _defaultCommand = new LibrarySearchCommand(sonarrService, settings);
         }
 
+        /// <summary>
+        /// Processes user queries and routes them to appropriate commands based on flags and API availability.
+        /// Implements intelligent command matching, shortcuts, and fallback behavior.
+        /// </summary>
+        /// <param name="query">User input query containing search terms and command flags</param>
+        /// <param name="hasApiKey">Whether API key is configured and API commands are available</param>
+        /// <returns>List of results from the matched command or help/command list</returns>
+        /// <remarks>
+        /// Command routing logic:
+        /// 1. Empty query → show available commands list
+        /// 2. Special shortcuts (-n, -y) → direct refresh command execution
+        /// 3. Offline commands → always available regardless of API status
+        /// 4. Alternative command patterns → flexible command matching
+        /// 5. API commands → routed if API key is available
+        /// 6. Default → library search for unmatched queries
+        /// </remarks>
         public List<Result> HandleQuery(Query query, bool hasApiKey = true)
         {
             if (string.IsNullOrEmpty(query.Search))
@@ -60,7 +114,7 @@ namespace SonarrFlowLauncherPlugin.Commands
                         {
                             Title = "Refresh Overdue Episodes",
                             SubTitle = "Refreshing series with episodes that have already aired today...",
-                            IcoPath = "🔄",
+                            IcoPath = "Images\\refresh.png",
                             Score = 100,
                             Action = _ =>
                             {
@@ -95,7 +149,7 @@ namespace SonarrFlowLauncherPlugin.Commands
                         {
                             Title = "Refresh Yesterday's Calendar Series",
                             SubTitle = "Refreshing all series that had episodes in yesterday's calendar...",
-                            IcoPath = "🔄",
+                            IcoPath = "Images\\refresh.png",
                             Score = 100,
                             Action = _ =>
                             {
@@ -158,6 +212,19 @@ namespace SonarrFlowLauncherPlugin.Commands
             return _defaultCommand.Execute(query);
         }
 
+        /// <summary>
+        /// Generates a list of available commands based on current API configuration status.
+        /// Provides context-aware help showing only relevant commands.
+        /// </summary>
+        /// <param name="hasApiKey">Whether API key is configured and API features are available</param>
+        /// <returns>List of results showing available commands with descriptions and usage</returns>
+        /// <remarks>
+        /// Command display logic:
+        /// - Always shows offline/utility commands
+        /// - Shows API commands only when properly configured
+        /// - Includes special shortcuts and usage examples
+        /// - Provides configuration guidance when API is unavailable
+        /// </remarks>
         private List<Result> GetAvailableCommands(bool hasApiKey)
         {
             var results = new List<Result>();
@@ -209,6 +276,11 @@ namespace SonarrFlowLauncherPlugin.Commands
             return results;
         }
 
+        /// <summary>
+        /// Provides offline help information when API features are not available.
+        /// Shows commands that work without Sonarr API configuration.
+        /// </summary>
+        /// <returns>List of results describing offline-capable commands</returns>
         private List<Result> GetOfflineHelp()
         {
             return new List<Result>

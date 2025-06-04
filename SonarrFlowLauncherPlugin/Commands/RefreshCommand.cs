@@ -64,7 +64,7 @@ namespace SonarrFlowLauncherPlugin.Commands
                     {
                         Title = "Refresh All Series",
                         SubTitle = "Trigger a refresh/rescan of all series in Sonarr",
-                        IcoPath = "🔄",
+                        IcoPath = "Images\\refresh.png",
                         Score = 100,
                         Action = _ =>
                         {
@@ -89,7 +89,7 @@ namespace SonarrFlowLauncherPlugin.Commands
                     {
                         Title = "Refresh Today's Calendar Series",
                         SubTitle = "snr -r c - Refresh all series that have episodes in today's calendar",
-                        IcoPath = "🔄",
+                        IcoPath = "Images\\refresh.png",
                         Score = 95,
                         Action = _ =>
                         {
@@ -113,7 +113,7 @@ namespace SonarrFlowLauncherPlugin.Commands
                     {
                         Title = "Refresh Yesterday's Calendar Series",
                         SubTitle = "snr -r y - Refresh all series that had episodes in yesterday's calendar",
-                        IcoPath = "🔄",
+                        IcoPath = "Images\\refresh.png",
                         Score = 94,
                         Action = _ =>
                         {
@@ -137,7 +137,7 @@ namespace SonarrFlowLauncherPlugin.Commands
                     {
                         Title = "Refresh Overdue Episodes",
                         SubTitle = "snr -r n - Refresh series with episodes that have already aired today",
-                        IcoPath = "🔄",
+                        IcoPath = "Images\\refresh.png",
                         Score = 93,
                         Action = _ =>
                         {
@@ -161,7 +161,7 @@ namespace SonarrFlowLauncherPlugin.Commands
                     {
                         Title = "Refresh Prior Days",
                         SubTitle = "snr -r {number} - Refresh series from past N days (e.g., 'snr -r 3' for 3 days back)",
-                        IcoPath = "🔄",
+                        IcoPath = "Images\\refresh.png",
                         Score = 92,
                         Action = _ => false
                     });
@@ -173,7 +173,7 @@ namespace SonarrFlowLauncherPlugin.Commands
                         {
                             Title = "Refresh Options",
                             SubTitle = "Use '-r all' (all series), '-r c' (today), '-r y' (yesterday), '-r n' (overdue), '-r {days}' (prior days), or '-r <series name>' (specific series)",
-                            IcoPath = "🔄",
+                            IcoPath = "Images\\refresh.png",
                             Score = 90,
                             Action = _ => false
                         });
@@ -196,7 +196,7 @@ namespace SonarrFlowLauncherPlugin.Commands
                                 {
                                     Title = $"Refresh: {show.Title}",
                                     SubTitle = $"Refresh/rescan series: {show.Title} - {show.Status} | {stats.SeasonCount} Seasons",
-                                    IcoPath = !string.IsNullOrEmpty(show.PosterPath) ? show.PosterPath : "🔄",
+                                    IcoPath = !string.IsNullOrEmpty(show.PosterPath) ? show.PosterPath : "Images\\refresh.png",
                                     Score = 100,
                                     Action = _ =>
                                     {
@@ -224,7 +224,7 @@ namespace SonarrFlowLauncherPlugin.Commands
                             {
                                 Title = "No Series Found",
                                 SubTitle = $"No series found matching '{searchQuery}'. Try a different search term.",
-                                IcoPath = "🔄",
+                                IcoPath = "Images\\refresh.png",
                                 Score = 100,
                                 Action = _ => false
                             });
@@ -235,7 +235,7 @@ namespace SonarrFlowLauncherPlugin.Commands
                         {
                             Title = "Refresh All Series",
                             SubTitle = "Or refresh all series in Sonarr",
-                            IcoPath = "🔄",
+                            IcoPath = "Images\\refresh.png",
                             Score = 50,
                             Action = _ =>
                             {
@@ -263,7 +263,7 @@ namespace SonarrFlowLauncherPlugin.Commands
                         {
                             Title = "Search Error",
                             SubTitle = $"Failed to search for series: {ex.Message}",
-                            IcoPath = "🔄",
+                            IcoPath = "Images\\refresh.png",
                             Score = 100,
                             Action = _ => false
                         });
@@ -277,7 +277,7 @@ namespace SonarrFlowLauncherPlugin.Commands
                 {
                     Title = "Error",
                     SubTitle = $"Failed to execute refresh command: {ex.Message}",
-                    IcoPath = "🔄",
+                    IcoPath = "Images\\refresh.png",
                     Score = 100,
                     Action = _ => false
                 });
@@ -294,7 +294,7 @@ namespace SonarrFlowLauncherPlugin.Commands
                 {
                     Title = "Refresh Today's Calendar Series",
                     SubTitle = "Refreshing all series that have episodes in today's calendar...",
-                    IcoPath = "🔄",
+                    IcoPath = "Images\\refresh.png",
                     Score = 100,
                     Action = _ =>
                     {
@@ -324,7 +324,7 @@ namespace SonarrFlowLauncherPlugin.Commands
                 {
                     Title = "Refresh Overdue Episodes",
                     SubTitle = "Refreshing series with episodes that have already aired today...",
-                    IcoPath = "🔄",
+                    IcoPath = "Images\\refresh.png",
                     Score = 100,
                     Action = _ =>
                     {
@@ -354,7 +354,7 @@ namespace SonarrFlowLauncherPlugin.Commands
                 {
                     Title = "Refresh Yesterday's Calendar Series",
                     SubTitle = "Refreshing all series that had episodes in yesterday's calendar...",
-                    IcoPath = "🔄",
+                    IcoPath = "Images\\refresh.png",
                     Score = 100,
                     Action = _ =>
                     {
@@ -384,7 +384,7 @@ namespace SonarrFlowLauncherPlugin.Commands
                 {
                     Title = $"Refresh Prior {daysBack} Day{(daysBack > 1 ? "s" : "")} Calendar Series",
                     SubTitle = $"Refreshing all series that had episodes in the past {daysBack} day{(daysBack > 1 ? "s" : "")}...",
-                    IcoPath = "🔄",
+                    IcoPath = "Images\\refresh.png",
                     Score = 100,
                     Action = _ =>
                     {

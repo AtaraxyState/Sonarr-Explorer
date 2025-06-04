@@ -86,7 +86,7 @@ namespace SonarrFlowLauncherPlugin.Services
             {
                 Title = "Refresh Series",
                 SubTitle = $"Trigger a rescan of {seriesTitle}",
-                IcoPath = "🔄",
+                IcoPath = "Images\\refresh.png",
                 Score = score,
                 Action = _ => RefreshSeries(seriesId)
             };
