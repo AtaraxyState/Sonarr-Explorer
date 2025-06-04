@@ -74,9 +74,9 @@ namespace SonarrFlowLauncherPlugin.Commands
 
                 results.Add(new Result
                 {
-                    Title = "🔄 Reload Plugin",
+                    Title = "Reload Plugin",
                     SubTitle = "snr -test reload - Reload plugin settings",
-                    IcoPath = "Images\\icon.png",
+                    IcoPath = "🔄",
                     Score = 92,
                     Action = _ => ReloadPlugin()
                 });
@@ -256,9 +256,9 @@ namespace SonarrFlowLauncherPlugin.Commands
             {
                 new Result
                 {
-                    Title = "🔄 Reload Plugin Settings",
+                    Title = "Reload Plugin Settings",
                     SubTitle = "Reload configuration without restarting Flow Launcher",
-                    IcoPath = "Images\\icon.png",
+                    IcoPath = "🔄",
                     Score = 100,
                     Action = _ => ReloadPlugin()
                 }

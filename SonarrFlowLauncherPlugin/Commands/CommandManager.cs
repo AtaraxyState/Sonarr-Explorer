@@ -58,9 +58,9 @@ namespace SonarrFlowLauncherPlugin.Commands
                     {
                         new Result
                         {
-                            Title = "🔄 Refresh Overdue Episodes",
+                            Title = "Refresh Overdue Episodes",
                             SubTitle = "Refreshing series with episodes that have already aired today...",
-                            IcoPath = "Images\\icon.png",
+                            IcoPath = "🔄",
                             Score = 100,
                             Action = _ =>
                             {
@@ -93,9 +93,9 @@ namespace SonarrFlowLauncherPlugin.Commands
                     {
                         new Result
                         {
-                            Title = "↻ Refresh Yesterday's Calendar Series",
+                            Title = "Refresh Yesterday's Calendar Series",
                             SubTitle = "Refreshing all series that had episodes in yesterday's calendar...",
-                            IcoPath = "Images\\icon.png",
+                            IcoPath = "🔄",
                             Score = 100,
                             Action = _ =>
                             {
