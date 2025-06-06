@@ -28,6 +28,7 @@ The Sonarr Flow Launcher Plugin provides seamless integration between Flow Launc
   - `CalendarCommand` - Episode calendar and scheduling
   - `ActivityCommand` - Download queue and history monitoring
   - `RefreshCommand` - Series refresh and rescan operations
+  - `SystemCommand` - Health check monitoring and system status
   - `SetupCommand` - Guided configuration wizard
   - `UtilityCommand` - Connection testing and diagnostics
   - `HelpCommand` - Command documentation and usage
@@ -43,6 +44,7 @@ The Sonarr Flow Launcher Plugin provides seamless integration between Flow Launc
   - `SonarrSeriesService` - Series search, metadata, and management
   - `SonarrCalendarService` - Calendar events and episode scheduling
   - `SonarrActivityService` - Download queue and completion history
+  - `SonarrHealthService` - Health check monitoring and system status
   - `ContextMenuService` - Context menu generation for series and episodes
 
 #### 5. Data Models
@@ -51,6 +53,7 @@ The Sonarr Flow Launcher Plugin provides seamless integration between Flow Launc
 - **`SonarrEpisodeBase.cs`** - Base class for different episode types
 - **`SonarrActivity.cs`** - Download and processing activity data
 - **`SonarrCalendar.cs`** - Calendar event containers
+- **`SonarrHealthCheck.cs`** - Health check issue details and status information
 - **`RefreshCalendarResult.cs`** - Refresh operation results
 
 ## Key Features
@@ -79,7 +82,14 @@ The Sonarr Flow Launcher Plugin provides seamless integration between Flow Launc
 - **Resolution Detection**: Automatic video resolution parsing and display
 - **File Size Information**: Storage usage for individual episodes
 
-### 5. Smart Configuration
+### 5. System Health Monitoring
+- **Health Check Display**: View all current system health issues
+- **Issue Categorization**: Errors, warnings, and informational messages
+- **Re-test Functionality**: Trigger health check re-tests for all or specific issues
+- **System Status Access**: Direct browser links to Sonarr's system status page
+- **Context Menu Integration**: Right-click options for health check management
+
+### 6. Smart Configuration
 - **Hot-Reloading**: Automatic settings reload without restart
 - **Connection Testing**: Real-time API connectivity monitoring
 - **Guided Setup**: Step-by-step configuration wizard
