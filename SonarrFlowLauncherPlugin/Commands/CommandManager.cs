@@ -62,7 +62,8 @@ namespace SonarrFlowLauncherPlugin.Commands
                 new ActivityCommand(sonarrService, settings),
                 new LibrarySearchCommand(sonarrService, settings),
                 new CalendarCommand(sonarrService, settings),
-                new RefreshCommand(sonarrService, settings)
+                new RefreshCommand(sonarrService, settings),
+                new SystemCommand(sonarrService, settings)
             };
 
             // Offline/utility commands that work without API

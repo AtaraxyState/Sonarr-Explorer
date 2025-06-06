@@ -304,6 +304,7 @@ namespace SonarrFlowLauncherPlugin
         /// Supports context menus for:
         /// - Series results: folder access, episode files, refresh options
         /// - Episode results: specific episode files, series actions, episode details
+        /// - Health check results: re-test options, system status access
         /// - Uses ContextData property to determine result type and available actions
         /// </remarks>
         public List<Result> LoadContextMenus(Result selectedResult)
@@ -317,6 +318,11 @@ namespace SonarrFlowLauncherPlugin
             else if (selectedResult.ContextData is SonarrEpisodeBase episodeItem)
             {
                 return _contextMenuService.BuildEpisodeContextMenu(episodeItem);
+            }
+            // Check if this is a health check item (system command)
+            else if (selectedResult.ContextData is SonarrHealthCheck healthCheck)
+            {
+                return Commands.SystemCommand.CreateHealthCheckContextMenu(healthCheck, _sonarrService);
             }
 
             return new List<Result>();

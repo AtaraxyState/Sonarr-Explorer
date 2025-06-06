@@ -15,6 +15,7 @@ namespace SonarrFlowLauncherPlugin.Services
         private readonly SonarrSeriesService _seriesService;
         private readonly SonarrCalendarService _calendarService;
         private readonly SonarrActivityService _activityService;
+        private readonly SonarrHealthService _healthService;
         private bool _disposed;
 
         public SonarrService(Settings settings)
@@ -23,6 +24,7 @@ namespace SonarrFlowLauncherPlugin.Services
             _seriesService = new SonarrSeriesService(_apiClient);
             _calendarService = new SonarrCalendarService(_apiClient, _seriesService);
             _activityService = new SonarrActivityService(_apiClient, _seriesService);
+            _healthService = new SonarrHealthService(_apiClient);
         }
 
         #region Series Operations
@@ -73,6 +75,25 @@ namespace SonarrFlowLauncherPlugin.Services
 
         #endregion
 
+        #region Health Operations
+
+        public async Task<List<SonarrHealthCheck>> GetHealthChecksAsync()
+            => await _healthService.GetHealthChecksAsync();
+
+        public async Task<bool> TriggerHealthCheckAsync()
+            => await _healthService.TriggerHealthCheckAsync();
+
+        public async Task<bool> RetestHealthCheckAsync(SonarrHealthCheck healthCheck)
+            => await _healthService.RetestHealthCheckAsync(healthCheck);
+
+        public bool OpenSystemStatusInBrowser()
+            => _healthService.OpenSystemStatusInBrowser();
+
+        public async Task<bool> PingAsync()
+            => await _healthService.PingAsync();
+
+        #endregion
+
         #region Utility Methods
 
         /// <summary>
@@ -94,6 +115,11 @@ namespace SonarrFlowLauncherPlugin.Services
         /// Provides access to the activity service for advanced scenarios
         /// </summary>
         public SonarrActivityService ActivityService => _activityService;
+
+        /// <summary>
+        /// Provides access to the health service for advanced scenarios
+        /// </summary>
+        public SonarrHealthService HealthService => _healthService;
 
         #endregion
 
