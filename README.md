@@ -2,7 +2,7 @@
 
 A comprehensive Flow Launcher plugin for Sonarr integration. Search your library, monitor downloads, view upcoming episodes, and intelligently refresh series - all from your launcher.
 
-![Version](https://img.shields.io/badge/version-1.0.5-blue) ![Flow Launcher](https://img.shields.io/badge/Flow%20Launcher-compatible-green) ![.NET](https://img.shields.io/badge/.NET-7.0-purple)
+![Version](https://img.shields.io/badge/version-1.0.6-blue) ![Flow Launcher](https://img.shields.io/badge/Flow%20Launcher-compatible-green) ![.NET](https://img.shields.io/badge/.NET-7.0-purple)
 
 ## 🚀 Quick Start
 
