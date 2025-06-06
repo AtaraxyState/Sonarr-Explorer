@@ -1,4 +1,4 @@
-# Sonarr Flow Launcher Plugin Submission
+﻿# Sonarr Flow Launcher Plugin Submission
 
 This plugin is ready for submission to the official Flow Launcher plugin repository.
 
@@ -8,13 +8,13 @@ This plugin is ready for submission to the official Flow Launcher plugin reposit
 
 ## Requirements Checklist
 
-✅ **JSON submission file created** - Contains all required fields (ID, Name, Description, Author, Version, Language, Website, UrlDownload, UrlSourceCode, IcoPath)
+âœ… **JSON submission file created** - Contains all required fields (ID, Name, Description, Author, Version, Language, Website, UrlDownload, UrlSourceCode, IcoPath)
 
-✅ **GitHub Actions workflow setup** - Automated build and release pipeline configured in `.github/workflows/release.yml`
+âœ… **GitHub Actions workflow setup** - Automated build and release pipeline configured in `.github/workflows/release.yml`
 
-✅ **CDN icon URL** - Using jsdelivr.com CDN for global accessibility
+âœ… **CDN icon URL** - Using jsdelivr.com CDN for global accessibility
 
-✅ **Plugin Store policy compliance** - Plugin contains no malicious code, piracy, inappropriate content, etc.
+âœ… **Plugin Store policy compliance** - Plugin contains no malicious code, piracy, inappropriate content, etc.
 
 ## Next Steps
 
@@ -39,3 +39,4 @@ Users can manually install using:
 ```
 pm install https://github.com/AtaraxyState/Sonarr-Explorer/releases/latest/download/Sonarr Explorer-1.0.6.zip
 ``` 
+
