@@ -52,13 +52,21 @@ namespace SonarrFlowLauncherPlugin.Commands
                 Score = 93
             });
 
+            results.Add(new Result
+            {
+                Title = "🏥 System Health",
+                SubTitle = "snr -s - Monitor health checks, view issues, and trigger re-tests",
+                IcoPath = "Images\\icon.png",
+                Score = 92
+            });
+
             // Offline/utility commands
             results.Add(new Result
             {
                 Title = "ℹ️ Information Commands",
                 SubTitle = "snr -about - Plugin information and version",
                 IcoPath = "Images\\icon.png",
-                Score = 92
+                Score = 91
             });
 
             results.Add(new Result
@@ -66,7 +74,7 @@ namespace SonarrFlowLauncherPlugin.Commands
                 Title = "🔧 Utility Commands",
                 SubTitle = "snr -test - Test connection | snr -settings - Open settings",
                 IcoPath = "Images\\icon.png",
-                Score = 91
+                Score = 90
             });
 
             results.Add(new Result
@@ -74,7 +82,7 @@ namespace SonarrFlowLauncherPlugin.Commands
                 Title = "🕒 Date/Time Helpers",
                 SubTitle = "snr -date - Current date/time | snr -time [timezone] - Time conversion",
                 IcoPath = "Images\\icon.png",
-                Score = 90
+                Score = 89
             });
 
             results.Add(new Result
@@ -82,7 +90,7 @@ namespace SonarrFlowLauncherPlugin.Commands
                 Title = "🔗 External Links",
                 SubTitle = "snr -tvdb [series] - TVDB search | snr -imdb [series] - IMDB search",
                 IcoPath = "Images\\icon.png",
-                Score = 89
+                Score = 88
             });
 
             results.Add(new Result
@@ -90,7 +98,7 @@ namespace SonarrFlowLauncherPlugin.Commands
                 Title = "🌐 Community Links",
                 SubTitle = "snr -reddit - Open r/sonarr | snr -docs - Plugin documentation",
                 IcoPath = "Images\\icon.png",
-                Score = 88
+                Score = 87
             });
 
             // Configuration note
