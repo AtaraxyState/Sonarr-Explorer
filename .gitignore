@@ -23,6 +23,9 @@ secrets.json
 .env
 .env.local
 
+# Personal configuration files
+update-version.config.ps1
+
 # Test results
 TestResults/
 *.trx
